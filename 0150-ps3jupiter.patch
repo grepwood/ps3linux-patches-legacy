@@ -3812,7 +3812,7 @@
 +			continue;
 +
 +		if (test_bit(PS3_JUPITER_STA_CONFIG_BSSID_SET, &jstad->config_status)) {
-+			if (!compare_ether_addr(jstad->desired_bssid, scan_result->bssid)) {
++			if (!ether_addr_equal(jstad->desired_bssid, scan_result->bssid)) {
 +				best_scan_result = scan_result;
 +				break;
 +			} else {
