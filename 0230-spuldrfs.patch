@@ -22,8 +22,8 @@
  obj-$(CONFIG_SPUISO_FS) += spuisofs.o
 +obj-$(CONFIG_SPULDR_FS) += spuldrfs.o
 --- /dev/null	2012-09-14 22:51:10.211132341 +0200
-+++ b/arch/powerpc/platforms/ps3/spuldrfs.c	2012-09-15 00:10:21.884742114 +0200
-@@ -0,0 +1,1039 @@
++++ b/arch/powerpc/platforms/ps3/spuldrfs.c	2012-09-14 23:15:20.027883354 +0200
+@@ -0,0 +1,1031 @@
 +
 +/*
 + * PS3 spuldrfs
@@ -592,17 +592,13 @@
 +	/* directory inodes start off with i_nlink == 2 (for "." entry) */
 +	inc_nlink(root_inode);
 +
-+	sb->s_root = d_alloc_root(root_inode);
-+	if (!sb->s_root) {
-+		iput(root_inode);
++	sb->s_root = d_make_root(root_inode);
++	if (!sb->s_root)
 +		return (-ENOMEM);
-+	}
 +
 +	err = spuldrfs_fill_dir(sb->s_root, root_dir_contents);
-+	if (err) {
-+		iput(root_inode);
++	if (err)
 +		return (err);
-+	}
 +	
 +	return (0);
 +}
@@ -733,14 +729,10 @@
 + */
 +static int spuldrfs_create_spe(void)
 +{
-+	u64 ppe_id, vas_id, junk;
++	u64 vas_id, junk;
 +	int err;
 +
-+	err = lv1_get_logical_ppe_id(&ppe_id);
-+	if (err)
-+		return (-ENXIO);
-+
-+	err = lv1_get_virtual_address_space_id_of_ppe(ppe_id, &vas_id);
++	err = lv1_get_virtual_address_space_id_of_ppe(&vas_id);
 +	if (err)
 +		return (-ENXIO);
 +

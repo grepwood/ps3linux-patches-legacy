@@ -23,8 +23,8 @@
 +
 +obj-$(CONFIG_SPUISO_FS) += spuisofs.o
 --- /dev/null	2012-09-14 22:51:10.211132341 +0200
-+++ b/arch/powerpc/platforms/ps3/spuisofs.c	2012-09-15 00:09:02.341404156 +0200
-@@ -0,0 +1,1016 @@
++++ b/arch/powerpc/platforms/ps3/spuisofs.c	2012-09-14 23:15:35.964550949 +0200
+@@ -0,0 +1,1008 @@
 +
 +/*
 + * PS3 spuisofs
@@ -588,17 +588,13 @@
 +	/* directory inodes start off with i_nlink == 2 (for "." entry) */
 +	inc_nlink(root_inode);
 +
-+	sb->s_root = d_alloc_root(root_inode);
-+	if (!sb->s_root) {
-+		iput(root_inode);
++	sb->s_root = d_make_root(root_inode);
++	if (!sb->s_root)
 +		return (-ENOMEM);
-+	}
 +
 +	err = spuisofs_fill_dir(sb->s_root, root_dir_contents);
-+	if (err) {
-+		iput(root_inode);
++	if (err)
 +		return (err);
-+	}
 +	
 +	return (0);
 +}
@@ -739,14 +735,10 @@
 + */
 +static int spuisofs_create_spe(void)
 +{
-+	u64 ppe_id, vas_id, junk;
++	u64 vas_id, junk;
 +	int err;
 +
-+	err = lv1_get_logical_ppe_id(&ppe_id);
-+	if (err)
-+		return (-ENXIO);
-+
-+	err = lv1_get_virtual_address_space_id_of_ppe(ppe_id, &vas_id);
++	err = lv1_get_virtual_address_space_id_of_ppe(&vas_id);
 +	if (err)
 +		return (-ENXIO);
 +

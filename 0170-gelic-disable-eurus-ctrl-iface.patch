@@ -1,5 +1,5 @@
---- a/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-07-13 16:39:51.604426460 +0200
-+++ b/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-07-13 16:40:21.377761525 +0200
+--- a/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-01-26 01:39:32.000000000 +0100
++++ b/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-01-31 20:54:24.798382231 +0100
 @@ -1671,12 +1671,75 @@
  {
  	struct gelic_card *card;
@@ -20,30 +20,30 @@
 +	if (result)
 +		goto open_hv_device;
 +
-+	result = lv1_get_repository_node_value(1,
-+					       0x0000000073730000ul /* ss */,
-+					       0x6c61696400000000ul /* laid */,
-+					       lpar_id,
-+					       0,
-+					       &laid, &junk);
++	result = lv1_read_repository_node(1,
++					  0x0000000073730000ul /* ss */,
++					  0x6c61696400000000ul /* laid */,
++					  lpar_id,
++					  0,
++					  &laid, &junk);
 +	if (result || (laid != 0x1070000002000001ul))
 +		goto open_hv_device;
 +
-+	result = lv1_get_repository_node_value(1,
-+					       0x0000000073797300ul /* sys */,
-+					       0x6877000000000000ul /* hw */,
-+					       0x636f6e6669670000ul /* config */,
-+					       0,
-+					       &hwconfig, &junk);
++	result = lv1_read_repository_node(1,
++					  0x0000000073797300ul /* sys */,
++					  0x6877000000000000ul /* hw */,
++					  0x636f6e6669670000ul /* config */,
++					  0,
++					  &hwconfig, &junk);
 +	if (result || !(hwconfig & 0x40000ul))
 +		goto open_hv_device;
 +
-+	result = lv1_get_repository_node_value(1,
-+					       0x00000000696f7300ul /* ios */,
-+					       0x6e65740000000000ul /* net */,
-+					       0x6575727573000000ul /* eurus */,
-+					       0x6c70617200000000ul /* lpar */,
-+					       &eurus_lpar_access, &junk);
++	result = lv1_read_repository_node(1,
++					  0x00000000696f7300ul /* ios */,
++					  0x6e65740000000000ul /* net */,
++					  0x6575727573000000ul /* eurus */,
++					  0x6c70617200000000ul /* lpar */,
++					  &eurus_lpar_access, &junk);
 +	if (result)
 +		goto open_hv_device;
 +

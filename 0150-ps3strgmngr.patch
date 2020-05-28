@@ -21,13 +21,15 @@
  config PS3GELIC_UDBG
  	bool "PS3 udbg output via UDP broadcasts on Ethernet"
  	depends on PPC_PS3
---- a/arch/powerpc/include/asm/Kbuild	2012-02-06 18:47:00.000000000 +0100
-+++ b/arch/powerpc/include/asm/Kbuild	2012-02-10 19:03:29.795768643 +0100
-@@ -34,3 +34,4 @@
+--- a/arch/powerpc/include/asm/Kbuild	2012-04-02 19:32:52.000000000 +0200
++++ b/arch/powerpc/include/asm/Kbuild	2012-04-03 18:06:02.834772058 +0200
+@@ -34,5 +34,6 @@
  header-y += types.h
  header-y += ucontext.h
  header-y += unistd.h
 +header-y += ps3strgmngr.h
+ 
+ generic-y += rwsem.h
 --- /dev/null	2012-02-10 17:03:27.997801619 +0100
 +++ b/arch/powerpc/include/asm/ps3strgmngr.h	2012-02-10 18:49:42.806463666 +0100
 @@ -0,0 +1,101 @@
@@ -204,19 +206,19 @@
 +	u64 flash_ext_flag, junk;
 +	int res;
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x726567696f6e0000ul | rgn_index /* region */,
-+					       0x6964000000000000ul /* id */,
-+					       &rgn->id, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x726567696f6e0000ul | rgn_index /* region */,
++					  0x6964000000000000ul /* id */,
++					  &rgn->id, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
 +	if (dev_type == STORAGE_DEV_TYPE_DISK) {
-+		res = lv1_get_repository_node_value(1, 0x0000000073797300ul /* sys */,
-+						       0x666c617368000000ul /* flash */,
-+						       0x6578740000000000ul /* ext */,
-+						       0, &flash_ext_flag, &junk);
++		res = lv1_read_repository_node(1, 0x0000000073797300ul /* sys */,
++						  0x666c617368000000ul /* flash */,
++						  0x6578740000000000ul /* ext */,
++						  0, &flash_ext_flag, &junk);
 +		if (res)
 +			return (-ENXIO);
 +
@@ -224,19 +226,19 @@
 +			rgn->id += 1;
 +	}
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x726567696f6e0000ul | rgn_index /* region */,
-+					       0x7374617274000000ul /* start */,
-+					       &rgn->start_block, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x726567696f6e0000ul | rgn_index /* region */,
++					  0x7374617274000000ul /* start */,
++					  &rgn->start_block, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x726567696f6e0000ul | rgn_index /* region */,
-+					       0x73697a6500000000ul /* size */,
-+					       &rgn->nr_blocks, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x726567696f6e0000ul | rgn_index /* region */,
++					  0x73697a6500000000ul /* size */,
++					  &rgn->nr_blocks, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
@@ -255,10 +257,10 @@
 +	unsigned int rgn_index;
 +	int res;
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x7479706500000000ul /* type */,
-+					       0, &type, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x7479706500000000ul /* type */,
++					  0, &type, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
@@ -280,31 +282,31 @@
 +	break;
 +	}
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x6964000000000000ul /* id */,
-+					       0, &dev->id, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x6964000000000000ul /* id */,
++					  0, &dev->id, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x626c6b5f73697a65ul /* blk_size */,
-+					       0, &dev->block_size, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x626c6b5f73697a65ul /* blk_size */,
++					  0, &dev->block_size, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x6e5f626c6f636b73ul /* n_blocks */,
-+					       0, &dev->nr_blocks, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x6e5f626c6f636b73ul /* n_blocks */,
++					  0, &dev->nr_blocks, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6465760000000000ul | dev_index /* dev */,
-+					       0x6e5f726567730000ul /* n_regs */,
-+					       0, &nr_regions, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6465760000000000ul | dev_index /* dev */,
++					  0x6e5f726567730000ul /* n_regs */,
++					  0, &nr_regions, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
@@ -334,9 +336,9 @@
 +	dev = get_devices->device;
 +
 +	for (bus_index = 0; bus_index < 10; bus_index++) {
-+		res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+						       0x7479706500000000ul /* type */,
-+						       0, 0, &bus_type, &junk);
++		res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++						  0x7479706500000000ul /* type */,
++						  0, 0, &bus_type, &junk);
 +		if (res)
 +			continue;
 +
@@ -347,15 +349,15 @@
 +	if (bus_index >= 10)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6964000000000000ul /* id */,
-+					       0, 0, &bus_id, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6964000000000000ul /* id */,
++					  0, 0, &bus_id, &junk);
 +	if (res)
 +		return (-ENXIO);
 +
-+	res = lv1_get_repository_node_value(1, 0x0000000062757300ul | bus_index /* bus */,
-+					       0x6e756d5f64657600ul /* num_dev */,
-+					       0, 0, &nr_devices, &junk);
++	res = lv1_read_repository_node(1, 0x0000000062757300ul | bus_index /* bus */,
++					  0x6e756d5f64657600ul /* num_dev */,
++					  0, 0, &nr_devices, &junk);
 +	if (res)
 +		return (-ENXIO);
 +

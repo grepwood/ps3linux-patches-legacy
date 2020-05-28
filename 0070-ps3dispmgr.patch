@@ -80,10 +80,10 @@
 +	if (result)
 +		goto out;
 +
-+	result = lv1_get_repository_node_value(1, 0x0000000073730000ul /* ss */,
-+					       0x6c61696400000000ul /* laid */,
-+					       lpar_id,
-+					       0, &laid, &junk);
++	result = lv1_read_repository_node(1, 0x0000000073730000ul /* ss */,
++					     0x6c61696400000000ul /* laid */,
++					     lpar_id,
++					     0, &laid, &junk);
 +	if (result)
 +		goto out;
 +

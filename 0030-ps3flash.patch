@@ -100,8 +100,8 @@
  obj-$(CONFIG_PS3_VRAM)		+= ps3vram.o
  obj-$(CONFIG_ATARI_FLOPPY)	+= ataflop.o
  obj-$(CONFIG_AMIGA_Z2RAM)	+= z2ram.o
---- /dev/null	2013-02-15 18:37:48.373100583 +0100
-+++ b/drivers/block/ps3flash.c	2013-02-15 21:15:12.330316672 +0100
+--- /dev/null	2012-11-28 15:48:49.557690341 +0100
++++ b/drivers/block/ps3flash.c	2013-02-14 11:18:29.076533279 +0100
 @@ -0,0 +1,520 @@
 +/*
 + * PS3 Flash Storage Driver
@@ -453,10 +453,10 @@
 +	if (error)
 +		goto fail_teardown;
 +
-+	error = lv1_get_repository_node_value(1, 0x0000000073797300ul /* sys */,
-+					      0x666c617368000000ul /* flash */,
-+					      0x6578740000000000ul /* ext */,
-+					      0, &flash_ext_flag, &junk);
++	error = lv1_read_repository_node(1, 0x0000000073797300ul /* sys */,
++					    0x666c617368000000ul /* flash */,
++					    0x6578740000000000ul /* ext */,
++					    0, &flash_ext_flag, &junk);
 +	if (error)
 +		goto fail_teardown;
 +
@@ -624,7 +624,7 @@
 +MODULE_AUTHOR("Sony Corporation");
 +MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
 --- /dev/null	2013-02-15 18:37:48.373100583 +0100
-+++ b/drivers/block/ps3nflash.c	2013-02-15 23:29:24.494118457 +0100
++++ b/drivers/block/ps3nflash.c	2013-02-15 23:15:44.710737431 +0100
 @@ -0,0 +1,448 @@
 +/*
 + * PS3 Flash Storage Driver

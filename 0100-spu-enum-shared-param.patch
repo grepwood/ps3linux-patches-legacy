@@ -16,7 +16,7 @@
  #include <asm/kexec.h>
  
 +static int enum_shared = 0;
-+module_param(enum_shared, bool, S_IRUGO);
++module_param(enum_shared, int, S_IRUGO);
 +MODULE_PARM_DESC(enum_shared, "Enumerate shared SPUs");
 +
  const struct spu_management_ops *spu_management_ops;
