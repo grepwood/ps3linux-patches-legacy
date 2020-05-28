@@ -21,15 +21,13 @@
  config PS3GELIC_UDBG
  	bool "PS3 udbg output via UDP broadcasts on Ethernet"
  	depends on PPC_PS3
---- a/arch/powerpc/include/asm/Kbuild	2012-04-02 19:32:52.000000000 +0200
-+++ b/arch/powerpc/include/asm/Kbuild	2012-04-03 18:06:02.834772058 +0200
-@@ -34,5 +34,6 @@
+--- a/arch/powerpc/include/uapi/asm/Kbuild	2012-12-11 10:00:27.000000000 -0900
++++ b/arch/powerpc/include/uapi/asm/Kbuild	2012-12-11 10:00:46.000000000 -0900
+@@ -42,3 +42,4 @@
  header-y += types.h
  header-y += ucontext.h
  header-y += unistd.h
 +header-y += ps3strgmngr.h
- 
- generic-y += rwsem.h
 --- /dev/null	2012-02-10 17:03:27.997801619 +0100
 +++ b/arch/powerpc/include/asm/ps3strgmngr.h	2012-02-10 18:49:42.806463666 +0100
 @@ -0,0 +1,101 @@

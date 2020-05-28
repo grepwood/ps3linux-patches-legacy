@@ -478,7 +478,7 @@
  			  (1 << GPU_INTR_STATUS_FLIP_1);
  
  	/* Clear memory to prevent kernel info leakage into userspace */
-@@ -1112,18 +1432,29 @@
+@@ -1434,19 +1434,30 @@
  		ps3fb_videomemory.address, GPU_IOIF, xdr_lpar,
  		ps3fb_videomemory.size);
  
@@ -508,12 +508,13 @@
  	}
  
  	info = framebuffer_alloc(sizeof(struct ps3fb_par), &dev->core);
- 	if (!info)
+ 	if (!info) {
+ 		retval = -ENOMEM;
 -		goto err_context_fb_close;
 +		goto err_iounmap_fifo_ctrl;
+ 	}
  
  	par = info->par;
- 	par->mode_id = ~ps3fb_mode;	/* != ps3fb_mode, to trigger change */
 @@ -1188,8 +1519,8 @@
  	fb_dealloc_cmap(&info->cmap);
  err_framebuffer_release:

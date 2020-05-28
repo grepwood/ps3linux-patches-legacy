@@ -126,7 +126,7 @@
 +	if (((vma->vm_pgoff << PAGE_SHIFT) + size) > mem_size)
 +		return (-EINVAL);
 +
-+	vma->vm_flags |= VM_RESERVED | VM_IO;
++	vma->vm_flags |= VM_DONTEXPAND | VM_DONTDUMP | VM_IO;
 +	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 +
 +	pfn = ((unsigned long) ps3physmem_virt >> PAGE_SHIFT) + vma->vm_pgoff;
