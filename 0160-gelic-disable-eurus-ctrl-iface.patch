@@ -58,12 +58,12 @@
 +
 +	eurus_lpar_access &= ~(1ul << lpar_id);
 +
-+	result = lv1_modify_repository_node_value(1,
-+						  0x00000000696f7300ul /* ios */,
-+						  0x6e65740000000000ul /* net */,
-+						  0x6575727573000000ul /* eurus */,
-+						  0x6c70617200000000ul /* lpar */,
-+						  eurus_lpar_access, junk);
++	result = lv1_write_repository_node(1,
++					   0x00000000696f7300ul /* ios */,
++					   0x6e65740000000000ul /* net */,
++					   0x6575727573000000ul /* eurus */,
++					   0x6c70617200000000ul /* lpar */,
++					   eurus_lpar_access, junk);
 +	if (result)
 +		dev_info(&dev->core, "%s: eurus control interface could not be disabled\n",
 +			 __func__);

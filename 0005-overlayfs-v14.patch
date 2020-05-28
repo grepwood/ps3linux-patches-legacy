@@ -1,7 +1,7 @@
-From ce63c57ecd21ff98799d96bd9c87209b3777084d Mon Sep 17 00:00:00 2001
+From 1f8c243de11306a46d761c5e94a662cacccd55b4 Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:13 +0200
-Subject: [PATCH] vfs: pass struct path to __dentry_open()
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- vfs: pass struct path to __dentry_open()
 
 Make __dentry_open() take a struct path instead of separate vfsmount and dentry
 arguments.
@@ -11,22 +11,22 @@ instead of transferring it to the open file.
 
 Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
 ---
- fs/open.c |   48 ++++++++++++++++++++++--------------------------
- 1 files changed, 22 insertions(+), 26 deletions(-)
+ fs/open.c |   49 ++++++++++++++++++++++---------------------------
+ 1 files changed, 22 insertions(+), 27 deletions(-)
 
 diff --git a/fs/open.c b/fs/open.c
-index 5720854..64e65ca 100644
+index 33ae87c..d805458 100644
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -644,24 +644,24 @@ static inline int __get_file_write_access(struct inode *inode,
- 	return error;
+@@ -670,24 +670,24 @@ int open_check_o_direct(struct file *f)
+ 	return 0;
  }
  
--static struct file *__dentry_open(struct dentry *dentry, struct vfsmount *mnt,
--					struct file *f,
--					int (*open)(struct inode *, struct file *),
--					const struct cred *cred)
-+static struct file *__dentry_open(struct path *path, struct file *f,
+-static struct file *do_dentry_open(struct dentry *dentry, struct vfsmount *mnt,
+-				   struct file *f,
+-				   int (*open)(struct inode *, struct file *),
+-				   const struct cred *cred)
++static struct file *do_dentry_open(struct path *path, struct file *f,
 +				  int (*open)(struct inode *, struct file *),
 +				  const struct cred *cred)
  {
@@ -49,7 +49,7 @@ index 5720854..64e65ca 100644
  		if (error)
  			goto cleanup_file;
  		if (!special_file(inode->i_mode))
-@@ -669,8 +669,7 @@ static struct file *__dentry_open(struct dentry *dentry, struct vfsmount *mnt,
+@@ -695,8 +695,7 @@ static struct file *do_dentry_open(struct dentry *dentry, struct vfsmount *mnt,
  	}
  
  	f->f_mapping = inode->i_mapping;
@@ -59,7 +59,7 @@ index 5720854..64e65ca 100644
  	f->f_pos = 0;
  	file_sb_list_add(f, inode->i_sb);
  
-@@ -727,7 +726,7 @@ cleanup_all:
+@@ -743,24 +742,22 @@ cleanup_all:
  			 * here, so just reset the state.
  			 */
  			file_reset_write(f);
@@ -68,17 +68,27 @@ index 5720854..64e65ca 100644
  		}
  	}
  	file_sb_list_del(f);
-@@ -735,8 +734,7 @@ cleanup_all:
+ 	f->f_path.dentry = NULL;
  	f->f_path.mnt = NULL;
  cleanup_file:
- 	put_filp(f);
 -	dput(dentry);
 -	mntput(mnt);
 +	path_put(path);
  	return ERR_PTR(error);
  }
  
-@@ -762,14 +760,14 @@ cleanup_file:
+-static struct file *__dentry_open(struct dentry *dentry, struct vfsmount *mnt,
+-				struct file *f,
++static struct file *__dentry_open(struct path *path, struct file *f,
+ 				int (*open)(struct inode *, struct file *),
+ 				const struct cred *cred)
+ {
+-	struct file *res = do_dentry_open(dentry, mnt, f, open, cred);
++	struct file *res = do_dentry_open(path, f, open, cred);
+ 	if (!IS_ERR(res)) {
+ 		int error = open_check_o_direct(f);
+ 		if (error) {
+@@ -795,14 +792,14 @@ static struct file *__dentry_open(struct dentry *dentry, struct vfsmount *mnt,
  struct file *lookup_instantiate_filp(struct nameidata *nd, struct dentry *dentry,
  		int (*open)(struct inode *, struct file *))
  {
@@ -95,22 +105,18 @@ index 5720854..64e65ca 100644
  					     open, cred);
  out:
  	return nd->intent.open.file;
-@@ -797,11 +795,9 @@ struct file *nameidata_to_filp(struct nameidata *nd)
- 	nd->intent.open.file = NULL;
+@@ -834,9 +831,7 @@ struct file *nameidata_to_filp(struct nameidata *nd)
+ 	} else {
+ 		struct file *res;
  
- 	/* Has the filesystem initialised the file for us? */
--	if (filp->f_path.dentry == NULL) {
 -		path_get(&nd->path);
--		filp = __dentry_open(nd->path.dentry, nd->path.mnt, filp,
--				     NULL, cred);
--	}
-+	if (filp->f_path.dentry == NULL)
-+		filp = __dentry_open(&nd->path, filp, NULL, cred);
-+
- 	return filp;
- }
+-		res = do_dentry_open(nd->path.dentry, nd->path.mnt,
+-				     filp, NULL, cred);
++		res = do_dentry_open(&nd->path, filp, NULL, cred);
+ 		if (!IS_ERR(res)) {
+ 			int error;
  
-@@ -812,24 +808,24 @@ struct file *nameidata_to_filp(struct nameidata *nd)
+@@ -863,24 +858,24 @@ struct file *nameidata_to_filp(struct nameidata *nd)
  struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags,
  			 const struct cred *cred)
  {
@@ -144,12 +150,12 @@ index 5720854..64e65ca 100644
  EXPORT_SYMBOL(dentry_open);
  
 -- 
-1.7.6.5
+1.7.0.4
 
-From 305101a16a69df2df4edc6204fe699c88aaf66c8 Mon Sep 17 00:00:00 2001
+From 151546f173600517115efc48c4385dd0bd62e7e3 Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:13 +0200
-Subject: [PATCH] vfs: add i_op->open()
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- vfs: add i_op->open()
 
 Add a new inode operation i_op->open().  This is for stacked
 filesystems that want to return a struct file from a different
@@ -157,48 +163,49 @@ filesystem.
 
 Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
 ---
- Documentation/filesystems/Locking |    2 ++
+ Documentation/filesystems/Locking |    3 ++-
  Documentation/filesystems/vfs.txt |    8 ++++++++
  fs/open.c                         |   25 +++++++++++++++++++++++--
  include/linux/fs.h                |    3 +++
- 4 files changed, 36 insertions(+), 2 deletions(-)
+ 4 files changed, 36 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/filesystems/Locking b/Documentation/filesystems/Locking
-index 4fca82e..42b0539 100644
+index 8e2da1e..d885881 100644
 --- a/Documentation/filesystems/Locking
 +++ b/Documentation/filesystems/Locking
 @@ -62,6 +62,7 @@ ata *);
  	int (*removexattr) (struct dentry *, const char *);
- 	void (*truncate_range)(struct inode *, loff_t, loff_t);
  	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start, u64 len);
+ 	void (*update_time)(struct inode *, struct timespec *, int);
 +	struct file *(*open)(struct dentry *,struct file *,const struct cred *);
  
  locking rules:
  	all may block
-@@ -89,6 +90,7 @@ listxattr:	no
+@@ -89,7 +90,7 @@ listxattr:	no
  removexattr:	yes
- truncate_range:	yes
  fiemap:		no
+ update_time:	no
+-
 +open:		no
  	Additionally, ->rmdir(), ->unlink() and ->rename() have ->i_mutex on
  victim.
  	cross-directory ->rename() has (per-superblock) ->s_vfs_rename_sem.
 diff --git a/Documentation/filesystems/vfs.txt b/Documentation/filesystems/vfs.txt
-index 0d04920..f06c91f 100644
+index efd23f4..f586bc6 100644
 --- a/Documentation/filesystems/vfs.txt
 +++ b/Documentation/filesystems/vfs.txt
 @@ -364,6 +364,8 @@ struct inode_operations {
  	ssize_t (*listxattr) (struct dentry *, char *, size_t);
  	int (*removexattr) (struct dentry *, const char *);
- 	void (*truncate_range)(struct inode *, loff_t, loff_t);
+ 	void (*update_time)(struct inode *, struct timespec *, int);
 +	struct file *(*open) (struct dentry *, struct file *,
 +			      const struct cred *);
  };
  
  Again, all methods are called without any locks being held, unless
-@@ -475,6 +477,12 @@ otherwise noted.
-   truncate_range: a method provided by the underlying filesystem to truncate a
-   	range of blocks , i.e. punch a hole somewhere in a file.
+@@ -476,6 +478,12 @@ otherwise noted.
+   	an inode.  If this is not defined the VFS will update the inode itself
+   	and call mark_inode_dirty_sync.
  
 +  open: this is an alternative to f_op->open(), the difference is that this
 +	method may return any open file, not necessarily originating from the
@@ -206,23 +213,23 @@ index 0d04920..f06c91f 100644
 +	for stacking filesystems which want to allow native I/O directly on
 +	underlying files.
 +
- 
  The Address Space Object
  ========================
+ 
 diff --git a/fs/open.c b/fs/open.c
-index 64e65ca..3e132ba 100644
+index d805458..8751628 100644
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -796,7 +796,7 @@ struct file *nameidata_to_filp(struct nameidata *nd)
+@@ -831,7 +831,7 @@ struct file *nameidata_to_filp(struct nameidata *nd)
+ 	} else {
+ 		struct file *res;
  
- 	/* Has the filesystem initialised the file for us? */
- 	if (filp->f_path.dentry == NULL)
--		filp = __dentry_open(&nd->path, filp, NULL, cred);
-+		filp = vfs_open(&nd->path, filp, cred);
+-		res = do_dentry_open(&nd->path, filp, NULL, cred);
++		res = vfs_open(&nd->path, filp, cred);
+ 		if (!IS_ERR(res)) {
+ 			int error;
  
- 	return filp;
- }
-@@ -821,7 +821,7 @@ struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags,
+@@ -871,7 +871,7 @@ struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags,
  	f = get_empty_filp();
  	if (f != NULL) {
  		f->f_flags = flags;
@@ -231,7 +238,7 @@ index 64e65ca..3e132ba 100644
  	}
  	path_put(&path);
  
-@@ -829,6 +829,27 @@ struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags,
+@@ -879,6 +879,27 @@ struct file *dentry_open(struct dentry *dentry, struct vfsmount *mnt, int flags,
  }
  EXPORT_SYMBOL(dentry_open);
  
@@ -260,19 +267,19 @@ index 64e65ca..3e132ba 100644
  {
  	struct fdtable *fdt = files_fdtable(files);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 8de6755..82a4e65 100644
+index 17fd887..05d046f 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -1664,6 +1664,8 @@ struct inode_operations {
- 	void (*truncate_range)(struct inode *, loff_t, loff_t);
+@@ -1693,6 +1693,8 @@ struct inode_operations {
  	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
  		      u64 len);
+ 	int (*update_time)(struct inode *, struct timespec *, int);
 +	struct file *(*open) (struct dentry *, struct file *,
 +			      const struct cred *);
  } ____cacheline_aligned;
  
  struct seq_file;
-@@ -2021,6 +2023,7 @@ extern long do_sys_open(int dfd, const char __user *filename, int flags,
+@@ -2057,6 +2059,7 @@ extern long do_sys_open(int dfd, const char __user *filename, int flags,
  extern struct file *filp_open(const char *, int, umode_t);
  extern struct file *file_open_root(struct dentry *, struct vfsmount *,
  				   const char *, int);
@@ -281,12 +288,12 @@ index 8de6755..82a4e65 100644
  				 const struct cred *);
  extern int filp_close(struct file *, fl_owner_t id);
 -- 
-1.7.6.5
+1.7.0.4
 
-From 1239ae81cbb1fa91f8c533fab1b73ea69bddce17 Mon Sep 17 00:00:00 2001
+From c38f768dd757140a25f1a90b938d0d4479ba2966 Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:13 +0200
-Subject: [PATCH] vfs: export do_splice_direct() to modules
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- vfs: export do_splice_direct() to modules
 
 Export do_splice_direct() to modules.  Needed by overlay filesystem.
 
@@ -296,10 +303,10 @@ Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
  1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/fs/splice.c b/fs/splice.c
-index f847684..c124964 100644
+index 7bf08fa..890b82d 100644
 --- a/fs/splice.c
 +++ b/fs/splice.c
-@@ -1299,6 +1299,7 @@ long do_splice_direct(struct file *in, loff_t *ppos, struct file *out,
+@@ -1305,6 +1305,7 @@ long do_splice_direct(struct file *in, loff_t *ppos, struct file *out,
  
  	return ret;
  }
@@ -308,12 +315,12 @@ index f847684..c124964 100644
  static int splice_pipe_to_pipe(struct pipe_inode_info *ipipe,
  			       struct pipe_inode_info *opipe,
 -- 
-1.7.6.5
+1.7.0.4
 
-From 4dac444442188dee81acd1dcf4e6ec484b87049a Mon Sep 17 00:00:00 2001
+From 82660f76f95d769eab2ac3ed8d04748ce875a7af Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:13 +0200
-Subject: [PATCH] vfs: introduce clone_private_mount()
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- vfs: introduce clone_private_mount()
 
 Overlayfs needs a private clone of the mount, so create a function for
 this and export to modules.
@@ -325,10 +332,10 @@ Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
  2 files changed, 21 insertions(+), 0 deletions(-)
 
 diff --git a/fs/namespace.c b/fs/namespace.c
-index e608199..2551ec0 100644
+index 1e4a5fe..4833305 100644
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
-@@ -1325,6 +1325,24 @@ void drop_collected_mounts(struct vfsmount *mnt)
+@@ -1327,6 +1327,24 @@ void drop_collected_mounts(struct vfsmount *mnt)
  	release_mounts(&umount_list);
  }
  
@@ -368,12 +375,12 @@ index d7029f4..344a262 100644
  extern struct vfsmount *vfs_kern_mount(struct file_system_type *type,
  				      int flags, const char *name,
 -- 
-1.7.6.5
+1.7.0.4
 
-From 825a95802a04d169c6b249d96e70acbe8ccc17df Mon Sep 17 00:00:00 2001
+From 5ba2b49b86eb056d8fd5282bc8c50e32f7de33e6 Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:13 +0200
-Subject: [PATCH] overlay filesystem
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlay filesystem
 
 Overlayfs allows one, usually read-write, directory tree to be
 overlaid onto another, read-only directory tree.  All modifications
@@ -415,7 +422,6 @@ Missing:
    over a whiteout may result in filesystem corruption on the overlay level.
    IOW these operations need to become atomic or at least the corruption needs
    to be detected.
-
 
 The following cotributions have been folded into this patch:
 
@@ -3157,12 +3163,12 @@ index 0000000..0aaa4c2
 +module_init(ovl_init);
 +module_exit(ovl_exit);
 -- 
-1.7.6.5
+1.7.0.4
 
-From 72daa95b0dc380771e5fd4528d82a13f856b5b6b Mon Sep 17 00:00:00 2001
+From ad6ddc11ebe03a4c651c1a0df73b02c1e0c3442f Mon Sep 17 00:00:00 2001
 From: Andy Whitcroft <apw@canonical.com>
 Date: Fri, 1 Oct 2010 18:48:02 +0100
-Subject: [PATCH] overlayfs: add statfs support
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlayfs: add statfs support
 
 Add support for statfs to the overlayfs filesystem.  As the upper layer
 is the target of all write operations assume that the space in that
@@ -3214,12 +3220,12 @@ index 0aaa4c2..50cbef5 100644
  
  struct ovl_config {
 -- 
-1.7.6.5
+1.7.0.4
 
-From 6b5dca8c2e86b16b2927e1da19dc35279af1fc42 Mon Sep 17 00:00:00 2001
+From d2ba0403f4aa9b0e4d77ae8ee33b1ce33dc0094b Mon Sep 17 00:00:00 2001
 From: Erez Zadok <ezk@fsl.cs.sunysb.edu>
 Date: Mon, 23 May 2011 20:59:20 -0400
-Subject: [PATCH] overlayfs: implement show_options
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlayfs: implement show_options
 
 This is useful because of the stacking nature of overlayfs.  Users like to
 find out (via /proc/mounts) which lower/upper directory were used at mount
@@ -3366,12 +3372,12 @@ index 50cbef5..b8f8fa4 100644
  	return err;
  }
 -- 
-1.7.6.5
+1.7.0.4
 
-From c562d4813091c66bf875e5fb2bae58f2a7acc32b Mon Sep 17 00:00:00 2001
+From ef613738d4b80405712957c50c94b4901542c18c Mon Sep 17 00:00:00 2001
 From: Neil Brown <neilb@suse.de>
 Date: Mon, 14 May 2012 13:06:14 +0200
-Subject: [PATCH] overlay: overlay filesystem documentation
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlay: overlay filesystem documentation
 
 Document the overlay filesystem.
 
@@ -3588,10 +3594,10 @@ index 0000000..7161dc3
 +the behavior of the overlay is undefined, though it will not result in
 +a crash or deadlock.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index b362709..7ba226c 100644
+index 0d67d1b..c1a812c 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -4998,6 +4998,13 @@ F:	drivers/scsi/osd/
+@@ -5066,6 +5066,13 @@ F:	drivers/scsi/osd/
  F:	include/scsi/osd_*
  F:	fs/exofs/
  
@@ -3606,12 +3612,12 @@ index b362709..7ba226c 100644
  M:	Christian Lamparter <chunkeey@googlemail.com>
  L:	linux-wireless@vger.kernel.org
 -- 
-1.7.6.5
+1.7.0.4
 
-From 9f772650a89be1ddcd27a8fe725701d4455441b9 Mon Sep 17 00:00:00 2001
+From 492a72aeef5a72686159120dd2fb2522953befb8 Mon Sep 17 00:00:00 2001
 From: Miklos Szeredi <mszeredi@suse.cz>
 Date: Mon, 14 May 2012 13:06:14 +0200
-Subject: [PATCH] fs: limit filesystem stacking depth
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- fs: limit filesystem stacking depth
 
 Add a simple read-only counter to super_block that indicates deep this
 is in the stack of filesystems.  Previously ecryptfs was the only
@@ -3671,10 +3677,10 @@ index b8f8fa4..1d2d1e2 100644
  	err = PTR_ERR(ufs->upper_mnt);
  	if (IS_ERR(ufs->upper_mnt)) {
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 82a4e65..fdd1d38 100644
+index 05d046f..49b86cf 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -489,6 +489,12 @@ struct iattr {
+@@ -499,6 +499,12 @@ struct iattr {
   */
  #include <linux/quota.h>
  
@@ -3687,7 +3693,7 @@ index 82a4e65..fdd1d38 100644
  /** 
   * enum positive_aop_returns - aop return codes with specific semantics
   *
-@@ -1507,6 +1513,11 @@ struct super_block {
+@@ -1542,6 +1548,11 @@ struct super_block {
  
  	/* Being remounted read-only */
  	int s_readonly_remount;
@@ -3700,12 +3706,12 @@ index 82a4e65..fdd1d38 100644
  
  /* superblock cache pruning functions */
 -- 
-1.7.6.5
+1.7.0.4
 
-From 07ca3da4f970f5bd291f810955973ecde3d047dc Mon Sep 17 00:00:00 2001
+From 05d10e55a77af1084fc554e85e12397ff5135e4b Mon Sep 17 00:00:00 2001
 From: Robin Dong <hao.bigrat@gmail.com>
 Date: Mon, 12 Mar 2012 13:44:58 +0800
-Subject: [PATCH] overlayfs: fix possible leak in ovl_new_inode
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlayfs: fix possible leak in ovl_new_inode
 
 After allocating a new inode, if the mode of inode is incorrect, we should
 release it by iput().
@@ -3729,12 +3735,12 @@ index c220ea7..86bf663 100644
  	}
  
 -- 
-1.7.6.5
+1.7.0.4
 
-From 1114b0a86b9abd60f71a818af9b22fca88db0a07 Mon Sep 17 00:00:00 2001
+From ade24f387d99079cf3e012a5cddb42dfd7faef7c Mon Sep 17 00:00:00 2001
 From: Robin Dong <hao.bigrat@gmail.com>
 Date: Mon, 12 Mar 2012 13:44:59 +0800
-Subject: [PATCH] overlayfs: create new inode in ovl_link
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlayfs: create new inode in ovl_link
 
 Imaging using ext4 as upperdir which has a file "hello" and lowdir is
 totally empty.
@@ -3805,12 +3811,12 @@ index 00aa6d9..c914c97 100644
  			ovl_whiteout(upperdir, new);
  		dput(newdentry);
 -- 
-1.7.6.5
+1.7.0.4
 
-From fa07da7f8b6a2a76cff9fd22808b84c0f6bfa8e0 Mon Sep 17 00:00:00 2001
+From b11937a23893c3d47b8efb84267977b380675b9b Mon Sep 17 00:00:00 2001
 From: Andy Whitcroft <apw@canonical.com>
 Date: Tue, 1 May 2012 16:17:51 +0100
-Subject: [PATCH] inode_only_permission: export inode level permissions checks
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- inode_only_permission: export inode level permissions checks
 
 We need to be able to check inode permissions (but not filesystem implied
 permissions) for stackable filesystems.  Now that permissions involve
@@ -3826,10 +3832,10 @@ Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
  2 files changed, 32 insertions(+), 17 deletions(-)
 
 diff --git a/fs/namei.c b/fs/namei.c
-index c427919..e172a5b 100644
+index 7d69419..c69ce96 100644
 --- a/fs/namei.c
 +++ b/fs/namei.c
-@@ -328,6 +328,36 @@ static inline int do_inode_permission(struct inode *inode, int mask)
+@@ -315,6 +315,36 @@ static inline int do_inode_permission(struct inode *inode, int mask)
  }
  
  /**
@@ -3866,7 +3872,7 @@ index c427919..e172a5b 100644
   * inode_permission  -  check for access rights to a given inode
   * @inode:	inode to check permission on
   * @mask:	right to check for (%MAY_READ, %MAY_WRITE, %MAY_EXEC, ...)
-@@ -341,8 +371,6 @@ static inline int do_inode_permission(struct inode *inode, int mask)
+@@ -328,8 +358,6 @@ static inline int do_inode_permission(struct inode *inode, int mask)
   */
  int inode_permission(struct inode *inode, int mask)
  {
@@ -3875,7 +3881,7 @@ index c427919..e172a5b 100644
  	if (unlikely(mask & MAY_WRITE)) {
  		umode_t mode = inode->i_mode;
  
-@@ -352,23 +380,9 @@ int inode_permission(struct inode *inode, int mask)
+@@ -339,23 +367,9 @@ int inode_permission(struct inode *inode, int mask)
  		if (IS_RDONLY(inode) &&
  		    (S_ISREG(mode) || S_ISDIR(mode) || S_ISLNK(mode)))
  			return -EROFS;
@@ -3901,10 +3907,10 @@ index c427919..e172a5b 100644
  
  /**
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index fdd1d38..0b531ab 100644
+index 49b86cf..e99bb48 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -2226,6 +2226,7 @@ extern sector_t bmap(struct inode *, sector_t);
+@@ -2263,6 +2263,7 @@ extern sector_t bmap(struct inode *, sector_t);
  #endif
  extern int notify_change(struct dentry *, struct iattr *);
  extern int inode_permission(struct inode *, int);
@@ -3913,12 +3919,12 @@ index fdd1d38..0b531ab 100644
  
  static inline bool execute_ok(struct inode *inode)
 -- 
-1.7.6.5
+1.7.0.4
 
-From a1f4356e0126802b26e2c2267271c33375b21f3f Mon Sep 17 00:00:00 2001
+From ddcec43ac3b49f65cdc3c1f11361230f5125fb87 Mon Sep 17 00:00:00 2001
 From: Andy Whitcroft <apw@canonical.com>
 Date: Tue, 1 May 2012 16:17:52 +0100
-Subject: [PATCH] overlayfs: switch to use inode_only_permissions
+Subject: [PATCH] UBUNTU: ubuntu: overlayfs -- overlayfs: switch to use inode_only_permissions
 
 When checking permissions on an overlayfs inode we do not take into
 account either device cgroup restrictions nor security permissions.
@@ -3960,5 +3966,5 @@ index 86bf663..1a8e232 100644
  	dput(alias);
  	return err;
 -- 
-1.7.6.5
+1.7.0.4
 
