@@ -1893,9 +1893,9 @@
 +MODULE_DESCRIPTION("PS3 Jupiter");
 +MODULE_AUTHOR("glevand");
 +MODULE_LICENSE("GPL");
---- /dev/null	2013-03-07 08:18:06.538651881 +0100
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2013-03-13 10:01:11.374202121 +0100
-@@ -0,0 +1,2928 @@
+--- /dev/null	2012-05-05 10:04:09.332335008 +0200
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-05-06 00:36:02.085378416 +0200
+@@ -0,0 +1,2895 @@
 +
 +/*
 + * PS3 Jupiter STA
@@ -3130,61 +3130,28 @@
 +
 +static const iw_handler ps3_jupiter_sta_iw_handler[] =
 +{
-+	NULL,				/* SIOCSIWCOMMIT */
-+	ps3_jupiter_sta_get_name,	/* SIOCGIWNAME */
-+	NULL,				/* SIOCSIWNWID */
-+	NULL,				/* SIOCGIWNWID */
-+	ps3_jupiter_sta_set_freq,	/* SIOCSIWFREQ */
-+	ps3_jupiter_sta_get_freq,	/* SIOCGIWFREQ */
-+	ps3_jupiter_sta_set_mode,	/* SIOCSIWMODE */
-+	ps3_jupiter_sta_get_mode,	/* SIOCGIWMODE */
-+	NULL,				/* SIOCSIWSENS */
-+	NULL,				/* SIOCGIWSENS */
-+	NULL,				/* SIOCSIWRANGE */
-+	ps3_jupiter_sta_get_range,	/* SIOCGIWRANGE */
-+	NULL,				/* SIOCSIWPRIV */
-+	NULL,				/* SIOCGIWPRIV */
-+	NULL,				/* SIOCSIWSTATS */
-+	NULL,				/* SIOCGIWSTATS */
-+	NULL,				/* SIOCSIWSPY */
-+	NULL,				/* SIOCGIWSPY */
-+	NULL,				/* SIOCSIWTHRSPY */
-+	NULL,				/* SIOCGIWTHRSPY */
-+	ps3_jupiter_sta_set_ap,		/* SIOCSIWAP */
-+	ps3_jupiter_sta_get_ap,		/* SIOCGIWAP */
-+	ps3_jupiter_sta_set_mlme,	/* SIOCSIWMLME */
-+	NULL,				/* SIOCGIWAPLIST */
-+	ps3_jupiter_sta_set_scan,	/* SIOCSIWSCAN */
-+	ps3_jupiter_sta_get_scan,	/* SIOCGIWSCAN */
-+	ps3_jupiter_sta_set_essid,	/* SIOCSIWESSID */
-+	ps3_jupiter_sta_get_essid,	/* SIOCGIWESSID */
-+	NULL,				/* SIOCSIWNICKN */
-+	ps3_jupiter_sta_get_nick,	/* SIOCGIWNICKN */
-+	NULL,				/* -- hole -- */
-+	NULL,				/* -- hole -- */
-+	NULL,				/* SIOCSIWRATE */
-+	NULL,				/* SIOCGIWRATE */
-+	NULL,				/* SIOCSIWRTS */
-+	NULL,				/* SIOCGIWRTS */
-+	NULL,				/* SIOCSIWFRAG */
-+	NULL,				/* SIOCGIWFRAG */
-+	NULL,				/* SIOCSIWTXPOW */
-+	NULL,				/* SIOCGIWTXPOW */
-+	NULL,				/* SIOCSIWRETRY */
-+	NULL,				/* SIOCGIWRETRY */
-+	ps3_jupiter_sta_set_encode,	/* SIOCSIWENCODE */
-+	ps3_jupiter_sta_get_encode,	/* SIOCGIWENCODE */
-+	NULL,				/* SIOCSIWPOWER */
-+	NULL,				/* SIOCGIWPOWER */
-+	NULL,				/* -- hole -- */
-+	NULL,				/* -- hole -- */
-+	ps3_jupiter_sta_set_genie,	/* SIOCSIWGENIE */
-+	ps3_jupiter_sta_get_genie,	/* SIOCGIWGENIE */
-+	ps3_jupiter_sta_set_auth,	/* SIOCSIWAUTH */
-+	ps3_jupiter_sta_get_auth,	/* SIOCGIWAUTH */
-+	ps3_jupiter_sta_set_encodeext,	/* SIOCSIWENCODEEXT */
-+	ps3_jupiter_sta_get_encodeext,	/* SIOCGIWENCODEEXT */
-+	NULL,				/* SIOCSIWPMKSA */
++	IW_HANDLER(SIOCGIWNAME,		ps3_jupiter_sta_get_name),
++	IW_HANDLER(SIOCGIWNICKN,	ps3_jupiter_sta_get_nick),
++	IW_HANDLER(SIOCGIWRANGE,	ps3_jupiter_sta_get_range),
++	IW_HANDLER(SIOCSIWMODE,		ps3_jupiter_sta_set_mode),
++	IW_HANDLER(SIOCGIWMODE,		ps3_jupiter_sta_get_mode),
++	IW_HANDLER(SIOCSIWFREQ,		ps3_jupiter_sta_set_freq),
++	IW_HANDLER(SIOCGIWFREQ,		ps3_jupiter_sta_get_freq),
++	IW_HANDLER(SIOCSIWSCAN,		ps3_jupiter_sta_set_scan),
++	IW_HANDLER(SIOCGIWSCAN,		ps3_jupiter_sta_get_scan),
++	IW_HANDLER(SIOCSIWAUTH,		ps3_jupiter_sta_set_auth),
++	IW_HANDLER(SIOCGIWAUTH,		ps3_jupiter_sta_get_auth),
++	IW_HANDLER(SIOCSIWESSID,	ps3_jupiter_sta_set_essid),
++	IW_HANDLER(SIOCGIWESSID,	ps3_jupiter_sta_get_essid),
++	IW_HANDLER(SIOCSIWAP,		ps3_jupiter_sta_set_ap),
++	IW_HANDLER(SIOCGIWAP,		ps3_jupiter_sta_get_ap),
++	IW_HANDLER(SIOCSIWENCODE,	ps3_jupiter_sta_set_encode),
++	IW_HANDLER(SIOCGIWENCODE,	ps3_jupiter_sta_get_encode),
++	IW_HANDLER(SIOCSIWENCODEEXT,	ps3_jupiter_sta_set_encodeext),
++	IW_HANDLER(SIOCGIWENCODEEXT,	ps3_jupiter_sta_get_encodeext),
++	IW_HANDLER(SIOCSIWGENIE,	ps3_jupiter_sta_set_genie),
++	IW_HANDLER(SIOCGIWGENIE,	ps3_jupiter_sta_get_genie),
++	IW_HANDLER(SIOCSIWMLME,		ps3_jupiter_sta_set_mlme),
 +};
 +
 +#ifdef CONFIG_WEXT_PRIV

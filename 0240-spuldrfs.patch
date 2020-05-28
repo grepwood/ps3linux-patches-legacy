@@ -19,9 +19,9 @@
  
  obj-$(CONFIG_SPUISO_FS) += spuisofs.o
 +obj-$(CONFIG_SPULDR_FS) += spuldrfs.o
---- /dev/null	2013-03-17 10:37:27.341729274 +0100
-+++ b/arch/powerpc/platforms/ps3/spuldrfs.c	2013-03-17 15:21:03.119385870 +0100
-@@ -0,0 +1,1055 @@
+--- /dev/null	2012-09-14 22:51:10.211132341 +0200
++++ b/arch/powerpc/platforms/ps3/spuldrfs.c	2012-09-15 00:10:21.884742114 +0200
+@@ -0,0 +1,1039 @@
 +
 +/*
 + * PS3 spuldrfs
@@ -142,31 +142,6 @@
 +
 +static unsigned long spuldrfs_spe_resource_id = 6;
 +module_param(spuldrfs_spe_resource_id, ulong, 0);
-+
-+ssize_t simple_write_to_buffer(void *to, size_t available, loff_t *ppos,
-+	const void __user *from, size_t count)
-+{
-+	loff_t pos = *ppos;
-+	size_t res;
-+ 
-+	if (pos < 0)
-+		return (-EINVAL);
-+
-+	if (pos >= available || !count)
-+		return (0);
-+
-+	if (count > available - pos)
-+		count = available - pos;
-+
-+	res = copy_from_user(to + pos, from, count);
-+	if (res == count)
-+		return (-EFAULT);
-+
-+	count -= res;
-+	*ppos = pos + count;
-+
-+	return (count);
-+}
 +
 +/*
 + * spuldrfs_spe_regs_read
@@ -442,11 +417,21 @@
 +}
 + 
 +/*
++ * spuldrfs_i_callback
++ */
++static void spuldrfs_i_callback(struct rcu_head *head)
++{
++	struct inode *inode = container_of(head, struct inode, i_rcu);
++
++	kmem_cache_free(spuldrfs_inode_cache, SPULDRFS_I(inode));
++}
++
++/*
 + * spuldrfs_destroy_inode
 + */
 +static void spuldrfs_destroy_inode(struct inode *inode)
 +{
-+	kmem_cache_free(spuldrfs_inode_cache, SPULDRFS_I(inode));
++	call_rcu(&inode->i_rcu, spuldrfs_i_callback);
 +}
 +
 +/*
@@ -470,6 +455,7 @@
 +	if (!inode)
 +		return (NULL);
 +	
++	inode->i_ino = get_next_ino();
 +	inode->i_mode = mode;
 +	inode->i_uid = current_fsuid();
 +	inode->i_gid = current_fsgid();
@@ -485,11 +471,10 @@
 +{
 +	struct inode *inode = dentry->d_inode;
 +
-+	if ((attr->ia_valid & ATTR_SIZE) &&
-+	    (attr->ia_size != inode->i_size))
-+		return (-EINVAL);
++	setattr_copy(inode, attr);
++	mark_inode_dirty(inode);
 +
-+	return inode_setattr(inode, attr);
++	return (0);
 +}
 +
 +static const struct inode_operations spuldrfs_inode_ops = {
@@ -565,6 +550,60 @@
 +	.destroy_inode	= spuldrfs_destroy_inode,
 +	.statfs		= simple_statfs,
 +};
++
++/*
++ * spuldrfs_fill_super
++ */
++static int spuldrfs_fill_super(struct super_block *sb, void *data, int silent)
++{
++	const struct spuldrfs_tree_descr root_dir_contents[] = {
++		{ "priv2", &spuldrfs_spe_regs_fops, 0666, sizeof(struct spu_priv2), spuldrfs_spe_priv2_addr, spuldrfs_spe_priv2, },
++		{ "problem", &spuldrfs_spe_regs_fops, 0666, sizeof(struct spu_problem), spuldrfs_spe_problem_addr, spuldrfs_spe_problem, },
++		{ "ls", &spuldrfs_spe_mem_fops, 0666, LS_SIZE, spuldrfs_spe_ls_addr, spuldrfs_spe_ls, },
++		{ "shadow", &spuldrfs_spe_mem_fops, 0444, sizeof(struct spe_shadow), spuldrfs_spe_shadow_addr, spuldrfs_spe_shadow, },
++		{ "metldr", &spuldrfs_mem_fops, 0666, spuldrfs_spe_metldr_size, 0, spuldrfs_spe_metldr, },
++		{ "ldr", &spuldrfs_mem_fops, 0666, spuldrfs_spe_ldr_size, 0, spuldrfs_spe_ldr, },
++		{ "buf1", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf1_size, 0, spuldrfs_spe_buf1, },
++		{ "buf2", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf2_size, 0, spuldrfs_spe_buf2, },
++		{ "buf3", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf3_size, 0, spuldrfs_spe_buf3, },
++		{ "info", &spuldrfs_info_fops, 0444, 0, 0, NULL, },
++		{ "run", &spuldrfs_run_fops, 0222, 0, 0, NULL, },
++		{ },
++	};
++	struct inode *root_inode;
++	int err;
++ 
++	sb->s_maxbytes = MAX_LFS_FILESIZE;
++	sb->s_blocksize = PAGE_CACHE_SIZE;
++	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
++	sb->s_magic = SPULDRFS_MAGIC;
++	sb->s_op = &spuldrfs_super_ops;
++	sb->s_time_gran = 1;
++ 
++	root_inode = spuldrfs_new_inode(sb, S_IFDIR | 0755);
++	if (!root_inode)
++		return (-ENOMEM);
++
++	root_inode->i_op = &simple_dir_inode_operations;
++	root_inode->i_fop = &simple_dir_operations;
++
++	/* directory inodes start off with i_nlink == 2 (for "." entry) */
++	inc_nlink(root_inode);
++
++	sb->s_root = d_alloc_root(root_inode);
++	if (!sb->s_root) {
++		iput(root_inode);
++		return (-ENOMEM);
++	}
++
++	err = spuldrfs_fill_dir(sb->s_root, root_dir_contents);
++	if (err) {
++		iput(root_inode);
++		return (err);
++	}
++	
++	return (0);
++}
 +
 +/*
 + * spuldrfs_spe_interrupt
@@ -872,74 +911,17 @@
 +}
 +
 +/*
-+ * spuldrfs_fill_super
++ * spuldrfs_mount
 + */
-+static int spuldrfs_fill_super(struct super_block *sb, void *data, int silent)
++static struct dentry *spuldrfs_mount(struct file_system_type *fs_type,
++	int flags, const char *dev_name, void *data)
 +{
-+	const struct spuldrfs_tree_descr root_dir_contents[] = {
-+		{ "priv2", &spuldrfs_spe_regs_fops, 0666, sizeof(struct spu_priv2), spuldrfs_spe_priv2_addr, spuldrfs_spe_priv2, },
-+		{ "problem", &spuldrfs_spe_regs_fops, 0666, sizeof(struct spu_problem), spuldrfs_spe_problem_addr, spuldrfs_spe_problem, },
-+		{ "ls", &spuldrfs_spe_mem_fops, 0666, LS_SIZE, spuldrfs_spe_ls_addr, spuldrfs_spe_ls, },
-+		{ "shadow", &spuldrfs_spe_mem_fops, 0444, sizeof(struct spe_shadow), spuldrfs_spe_shadow_addr, spuldrfs_spe_shadow, },
-+		{ "metldr", &spuldrfs_mem_fops, 0666, spuldrfs_spe_metldr_size, 0, spuldrfs_spe_metldr, },
-+		{ "ldr", &spuldrfs_mem_fops, 0666, spuldrfs_spe_ldr_size, 0, spuldrfs_spe_ldr, },
-+		{ "buf1", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf1_size, 0, spuldrfs_spe_buf1, },
-+		{ "buf2", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf2_size, 0, spuldrfs_spe_buf2, },
-+		{ "buf3", &spuldrfs_mem_fops, 0666, spuldrfs_spe_buf3_size, 0, spuldrfs_spe_buf3, },
-+		{ "info", &spuldrfs_info_fops, 0444, 0, 0, NULL, },
-+		{ "run", &spuldrfs_run_fops, 0222, 0, 0, NULL, },
-+		{ },
-+	};
-+	struct inode *root_inode;
-+	int err;
-+
-+	sb->s_maxbytes = MAX_LFS_FILESIZE;
-+	sb->s_blocksize = PAGE_CACHE_SIZE;
-+	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
-+	sb->s_magic = SPULDRFS_MAGIC;
-+	sb->s_op = &spuldrfs_super_ops;
-+	sb->s_time_gran = 1;
-+ 
-+	root_inode = spuldrfs_new_inode(sb, S_IFDIR | 0755);
-+	if (!root_inode)
-+		return (-ENOMEM);
-+
-+	root_inode->i_op = &simple_dir_inode_operations;
-+	root_inode->i_fop = &simple_dir_operations;
-+
-+	/* directory inodes start off with i_nlink == 2 (for "." entry) */
-+	inc_nlink(root_inode);
-+
-+	sb->s_root = d_alloc_root(root_inode);
-+	if (!sb->s_root) {
-+		err = -ENOMEM;
-+		goto fail_put_root_inode;
-+	}
-+
-+	err = spuldrfs_fill_dir(sb->s_root, root_dir_contents);
-+	if (err)
-+		goto fail_put_root_inode;
-+	
-+	return (0);
-+
-+fail_put_root_inode:
-+
-+	iput(root_inode);
-+
-+	return (err);
-+}
-+
-+/*
-+ * spuldrfs_get_sb
-+ */
-+static int spuldrfs_get_sb(struct file_system_type *fstype, int flags,
-+	const char *name, void *data, struct vfsmount *mnt)
-+{
++	struct dentry *root;
 +	int err;
 +
 +	err = spuldrfs_create_spe();
 +	if (err)
-+		return (err);
++		return ERR_PTR(err);
 +
 +	spuldrfs_spe_metldr = vmalloc_user(spuldrfs_spe_metldr_size);
 +	if (!spuldrfs_spe_metldr) {
@@ -980,12 +962,14 @@
 +	}
 +
 +	memset(spuldrfs_spe_buf3, 0, spuldrfs_spe_buf3_size);
-+ 
-+	err = get_sb_single(fstype, flags, data, spuldrfs_fill_super, mnt);
-+	if (err)
-+		goto fail_free_spe_buf3;
 +
-+	return (0);
++	root = mount_single(fs_type, flags, data, spuldrfs_fill_super);
++	if (IS_ERR(root)) {
++		err = PTR_ERR(root);
++		goto fail_free_spe_buf3;
++	}
++
++	return (root);
 +
 +fail_free_spe_buf3:
 +
@@ -1011,7 +995,7 @@
 +
 +	spuldrfs_destruct_spe();
 +
-+	return (err);
++	return ERR_PTR(err);
 +}
 +
 +/*
@@ -1032,7 +1016,7 @@
 +static struct file_system_type spuldrfs_type = {
 +	.owner		= THIS_MODULE,
 +	.name		= "spuldrfs",
-+	.get_sb		= spuldrfs_get_sb,
++	.mount		= spuldrfs_mount,
 +	.kill_sb	= spuldrfs_kill_sb,
 +};
 +

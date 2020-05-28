@@ -91,16 +91,13 @@
 +	  In general, all users will say Y or M.
 +
  endmenu
---- a/drivers/char/Makefile	2013-03-13 08:51:42.078449730 +0100
-+++ b/drivers/char/Makefile	2013-03-13 08:52:11.534703797 +0100
-@@ -113,6 +113,7 @@
+--- a/drivers/char/Makefile	2012-08-02 23:17:17.153639603 +0200
++++ b/drivers/char/Makefile	2012-08-06 19:47:18.001587333 +0200
+@@ -67,3 +67,4 @@
  
  obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
  obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
 +obj-$(CONFIG_PS3_ENCDEC)	+= ps3encdec.o
- 
- # Files generated that shall be removed upon make clean
- clean-files := consolemap_deftbl.c defkeymap.c
 --- /dev/null	2012-08-07 02:54:53.492474007 +0200
 +++ b/drivers/char/ps3encdec.c	2012-08-07 02:56:38.822480157 +0200
 @@ -0,0 +1,394 @@

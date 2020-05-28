@@ -1,13 +1,10 @@
---- a/drivers/char/Makefile	2013-03-13 08:40:27.762437398 +0100
-+++ b/drivers/char/Makefile	2013-03-13 08:41:08.317923632 +0100
-@@ -112,6 +112,7 @@
+--- a/drivers/char/Makefile	2012-06-07 11:27:29.447355622 +0200
++++ b/drivers/char/Makefile	2012-06-07 11:28:31.760692581 +0200
+@@ -65,3 +65,4 @@
  js-rtc-y = rtc.o
  
  obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
 +obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
- 
- # Files generated that shall be removed upon make clean
- clean-files := consolemap_deftbl.c defkeymap.c
 --- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:27:29.450688955 +0200
 +++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:29:24.234028966 +0200
 @@ -370,4 +370,11 @@
@@ -22,13 +19,13 @@
 +	  on PS3 storage devices.
 +
  endmenu
---- a/arch/powerpc/include/asm/Kbuild	2013-03-13 08:46:08.333899953 +0100
-+++ b/arch/powerpc/include/asm/Kbuild	2013-03-13 08:46:28.777901333 +0100
-@@ -35,3 +35,4 @@
- unifdef-y += termios.h
- unifdef-y += types.h
- unifdef-y += unistd.h
-+unifdef-y += ps3strgmngr.h
+--- a/arch/powerpc/include/asm/Kbuild	2012-02-06 18:47:00.000000000 +0100
++++ b/arch/powerpc/include/asm/Kbuild	2012-02-10 19:03:29.795768643 +0100
+@@ -34,3 +34,4 @@
+ header-y += types.h
+ header-y += ucontext.h
+ header-y += unistd.h
++header-y += ps3strgmngr.h
 --- /dev/null	2012-02-10 17:03:27.997801619 +0100
 +++ b/arch/powerpc/include/asm/ps3strgmngr.h	2012-02-10 18:49:42.806463666 +0100
 @@ -0,0 +1,101 @@

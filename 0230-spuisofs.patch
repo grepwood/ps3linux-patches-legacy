@@ -20,9 +20,9 @@
  obj-y += device-init.o
 +
 +obj-$(CONFIG_SPUISO_FS) += spuisofs.o
---- /dev/null	2013-03-17 10:37:27.341729274 +0100
-+++ b/arch/powerpc/platforms/ps3/spuisofs.c	2013-03-17 15:18:35.099377259 +0100
-@@ -0,0 +1,1032 @@
+--- /dev/null	2012-09-14 22:51:10.211132341 +0200
++++ b/arch/powerpc/platforms/ps3/spuisofs.c	2012-09-15 00:09:02.341404156 +0200
+@@ -0,0 +1,1016 @@
 +
 +/*
 + * PS3 spuisofs
@@ -141,31 +141,6 @@
 +
 +static unsigned long spuisofs_spe_resource_id = 6;
 +module_param(spuisofs_spe_resource_id, ulong, 0);
-+
-+ssize_t simple_write_to_buffer(void *to, size_t available, loff_t *ppos,
-+	const void __user *from, size_t count)
-+{
-+	loff_t pos = *ppos;
-+	size_t res;
-+ 
-+	if (pos < 0)
-+		return (-EINVAL);
-+
-+	if (pos >= available || !count)
-+		return (0);
-+
-+	if (count > available - pos)
-+		count = available - pos;
-+
-+	res = copy_from_user(to + pos, from, count);
-+	if (res == count)
-+		return (-EFAULT);
-+
-+	count -= res;
-+	*ppos = pos + count;
-+
-+	return (count);
-+}
 +
 +/*
 + * spuisofs_spe_regs_read
@@ -439,11 +414,21 @@
 +}
 + 
 +/*
++ * spuisofs_i_callback
++ */
++static void spuisofs_i_callback(struct rcu_head *head)
++{
++	struct inode *inode = container_of(head, struct inode, i_rcu);
++
++	kmem_cache_free(spuisofs_inode_cache, SPUISOFS_I(inode));
++}
++
++/*
 + * spuisofs_destroy_inode
 + */
 +static void spuisofs_destroy_inode(struct inode *inode)
 +{
-+	kmem_cache_free(spuisofs_inode_cache, SPUISOFS_I(inode));
++	call_rcu(&inode->i_rcu, spuisofs_i_callback);
 +}
 +
 +/*
@@ -467,6 +452,7 @@
 +	if (!inode)
 +		return (NULL);
 +	
++	inode->i_ino = get_next_ino();
 +	inode->i_mode = mode;
 +	inode->i_uid = current_fsuid();
 +	inode->i_gid = current_fsgid();
@@ -482,11 +468,10 @@
 +{
 +	struct inode *inode = dentry->d_inode;
 +
-+	if ((attr->ia_valid & ATTR_SIZE) &&
-+	    (attr->ia_size != inode->i_size))
-+		return (-EINVAL);
++	setattr_copy(inode, attr);
++	mark_inode_dirty(inode);
 +
-+	return inode_setattr(inode, attr);
++	return (0);
 +}
 +
 +static const struct inode_operations spuisofs_inode_ops = {
@@ -562,6 +547,59 @@
 +	.destroy_inode	= spuisofs_destroy_inode,
 +	.statfs		= simple_statfs,
 +};
++
++/*
++ * spuisofs_fill_super
++ */
++static int spuisofs_fill_super(struct super_block *sb, void *data, int silent)
++{
++	const struct spuisofs_tree_descr root_dir_contents[] = {
++		{ "priv2", &spuisofs_spe_regs_fops, 0666, sizeof(struct spu_priv2), spuisofs_spe_priv2_addr, spuisofs_spe_priv2, },
++		{ "problem", &spuisofs_spe_regs_fops, 0666, sizeof(struct spu_problem), spuisofs_spe_problem_addr, spuisofs_spe_problem, },
++		{ "ls", &spuisofs_spe_mem_fops, 0666, LS_SIZE, spuisofs_spe_ls_addr, spuisofs_spe_ls, },
++		{ "shadow", &spuisofs_spe_mem_fops, 0444, sizeof(struct spe_shadow), spuisofs_spe_shadow_addr, spuisofs_spe_shadow, },
++		{ "app", &spuisofs_mem_fops, 0666, spuisofs_spe_app_size, 0, spuisofs_spe_app, },
++		{ "arg1", &spuisofs_mem_fops, 0666, spuisofs_spe_arg1_size, 0, spuisofs_spe_arg1, },
++		{ "arg2", &spuisofs_mem_fops, 0666, spuisofs_spe_arg2_size, 0, spuisofs_spe_arg2, },
++		{ "info", &spuisofs_info_fops, 0444, 0, 0, NULL, },
++		{ "run", &spuisofs_run_fops, 0222, sizeof(struct spuisofs_run_args), 0, NULL, },
++		{ "cont", &spuisofs_cont_fops, 0222, 0, 0, NULL, },
++		{ },
++	};
++	struct inode *root_inode;
++	int err;
++ 
++	sb->s_maxbytes = MAX_LFS_FILESIZE;
++	sb->s_blocksize = PAGE_CACHE_SIZE;
++	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
++	sb->s_magic = SPUISOFS_MAGIC;
++	sb->s_op = &spuisofs_super_ops;
++	sb->s_time_gran = 1;
++ 
++	root_inode = spuisofs_new_inode(sb, S_IFDIR | 0755);
++	if (!root_inode)
++		return (-ENOMEM);
++
++	root_inode->i_op = &simple_dir_inode_operations;
++	root_inode->i_fop = &simple_dir_operations;
++
++	/* directory inodes start off with i_nlink == 2 (for "." entry) */
++	inc_nlink(root_inode);
++
++	sb->s_root = d_alloc_root(root_inode);
++	if (!sb->s_root) {
++		iput(root_inode);
++		return (-ENOMEM);
++	}
++
++	err = spuisofs_fill_dir(sb->s_root, root_dir_contents);
++	if (err) {
++		iput(root_inode);
++		return (err);
++	}
++	
++	return (0);
++}
 +
 +/*
 + * spuisofs_spe_interrupt
@@ -877,73 +915,17 @@
 +}
 +
 +/*
-+ * spuisofs_fill_super
++ * spuisofs_mount
 + */
-+static int spuisofs_fill_super(struct super_block *sb, void *data, int silent)
++static struct dentry *spuisofs_mount(struct file_system_type *fs_type,
++	int flags, const char *dev_name, void *data)
 +{
-+	const struct spuisofs_tree_descr root_dir_contents[] = {
-+		{ "priv2", &spuisofs_spe_regs_fops, 0666, sizeof(struct spu_priv2), spuisofs_spe_priv2_addr, spuisofs_spe_priv2, },
-+		{ "problem", &spuisofs_spe_regs_fops, 0666, sizeof(struct spu_problem), spuisofs_spe_problem_addr, spuisofs_spe_problem, },
-+		{ "ls", &spuisofs_spe_mem_fops, 0666, LS_SIZE, spuisofs_spe_ls_addr, spuisofs_spe_ls, },
-+		{ "shadow", &spuisofs_spe_mem_fops, 0444, sizeof(struct spe_shadow), spuisofs_spe_shadow_addr, spuisofs_spe_shadow, },
-+		{ "app", &spuisofs_mem_fops, 0666, spuisofs_spe_app_size, 0, spuisofs_spe_app, },
-+		{ "arg1", &spuisofs_mem_fops, 0666, spuisofs_spe_arg1_size, 0, spuisofs_spe_arg1, },
-+		{ "arg2", &spuisofs_mem_fops, 0666, spuisofs_spe_arg2_size, 0, spuisofs_spe_arg2, },
-+		{ "info", &spuisofs_info_fops, 0444, 0, 0, NULL, },
-+		{ "run", &spuisofs_run_fops, 0222, sizeof(struct spuisofs_run_args), 0, NULL, },
-+		{ "cont", &spuisofs_cont_fops, 0222, 0, 0, NULL, },
-+		{ },
-+	};
-+	struct inode *root_inode;
-+	int err;
-+
-+	sb->s_maxbytes = MAX_LFS_FILESIZE;
-+	sb->s_blocksize = PAGE_CACHE_SIZE;
-+	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
-+	sb->s_magic = SPUISOFS_MAGIC;
-+	sb->s_op = &spuisofs_super_ops;
-+	sb->s_time_gran = 1;
-+ 
-+	root_inode = spuisofs_new_inode(sb, S_IFDIR | 0755);
-+	if (!root_inode)
-+		return (-ENOMEM);
-+
-+	root_inode->i_op = &simple_dir_inode_operations;
-+	root_inode->i_fop = &simple_dir_operations;
-+
-+	/* directory inodes start off with i_nlink == 2 (for "." entry) */
-+	inc_nlink(root_inode);
-+
-+	sb->s_root = d_alloc_root(root_inode);
-+	if (!sb->s_root) {
-+		err = -ENOMEM;
-+		goto fail_put_root_inode;
-+	}
-+
-+	err = spuisofs_fill_dir(sb->s_root, root_dir_contents);
-+	if (err)
-+		goto fail_put_root_inode;
-+	
-+	return (0);
-+
-+fail_put_root_inode:
-+
-+	iput(root_inode);
-+
-+	return (err);
-+}
-+
-+/*
-+ * spuisofs_get_sb
-+ */
-+static int spuisofs_get_sb(struct file_system_type *fstype, int flags,
-+	const char *name, void *data, struct vfsmount *mnt)
-+{
++	struct dentry *root;
 +	int err;
 +
 +	err = spuisofs_create_spe();
 +	if (err)
-+		return (err);
++		return ERR_PTR(err);
 +
 +	spuisofs_spe_app = vmalloc_user(spuisofs_spe_app_size);
 +	if (!spuisofs_spe_app) {
@@ -968,12 +950,14 @@
 +	}
 +
 +	memset(spuisofs_spe_arg2, 0, spuisofs_spe_arg2_size);
-+ 
-+	err = get_sb_single(fstype, flags, data, spuisofs_fill_super, mnt);
-+	if (err)
-+		goto fail_free_spe_arg2;
 +
-+	return (0);
++	root = mount_single(fs_type, flags, data, spuisofs_fill_super);
++	if (IS_ERR(root)) {
++		err = PTR_ERR(root);
++		goto fail_free_spe_arg2;
++	}
++
++	return (root);
 +
 +fail_free_spe_arg2:
 +
@@ -991,7 +975,7 @@
 +
 +	spuisofs_destruct_spe();
 +
-+	return (err);
++	return ERR_PTR(err);
 +}
 +
 +/*
@@ -1010,7 +994,7 @@
 +static struct file_system_type spuisofs_type = {
 +	.owner		= THIS_MODULE,
 +	.name		= "spuisofs",
-+	.get_sb		= spuisofs_get_sb,
++	.mount		= spuisofs_mount,
 +	.kill_sb	= spuisofs_kill_sb,
 +};
 +

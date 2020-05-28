@@ -1,13 +1,10 @@
---- a/drivers/char/Makefile	2013-03-13 08:53:36.270148837 +0100
-+++ b/drivers/char/Makefile	2013-03-13 08:53:57.950202451 +0100
-@@ -114,6 +114,7 @@
+--- a/drivers/char/Makefile	2012-10-27 02:15:23.000000000 -0800
++++ b/drivers/char/Makefile	2012-10-27 02:16:28.000000000 -0800
+@@ -67,3 +67,4 @@
  obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
  obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
  obj-$(CONFIG_PS3_ENCDEC)	+= ps3encdec.o
 +obj-$(CONFIG_PS3_LV1CALL)	+= ps3lv1call/
- 
- # Files generated that shall be removed upon make clean
- clean-files := consolemap_deftbl.c defkeymap.c
 --- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:07:28.000000000 -0900
 +++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:08:01.000000000 -0900
 @@ -216,4 +216,10 @@

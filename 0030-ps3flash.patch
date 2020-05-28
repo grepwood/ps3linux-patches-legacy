@@ -100,9 +100,9 @@
  obj-$(CONFIG_PS3_VRAM)		+= ps3vram.o
  obj-$(CONFIG_ATARI_FLOPPY)	+= ataflop.o
  obj-$(CONFIG_AMIGA_Z2RAM)	+= z2ram.o
---- /dev/null	2013-03-07 08:18:06.538651881 +0100
-+++ b/drivers/block/ps3flash.c	2013-03-13 09:11:01.298367969 +0100
-@@ -0,0 +1,533 @@
+--- /dev/null	2013-02-15 18:37:48.373100583 +0100
++++ b/drivers/block/ps3flash.c	2013-02-15 22:43:17.513957482 +0100
+@@ -0,0 +1,521 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -281,17 +281,17 @@
 +static void ps3flash_do_request(struct ps3_storage_device *dev,
 +			       struct request_queue *q)
 +{
++	struct ps3flash_private *priv = ps3_system_bus_get_drvdata(&dev->sbd);
 +	struct request *req;
 +
 +	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
 +
 +	while ((req = blk_fetch_request(q))) {
-+		if (blk_fs_request(req)) {
-+			if (ps3flash_submit_request_sg(dev, req))
-+				break;
-+		} else if (req->cmd_type == REQ_TYPE_LINUX_BLOCK &&
-+			   req->cmd[0] == REQ_LB_OP_FLUSH) {
++		if (priv->is_vflash && (req->cmd_flags & REQ_FLUSH)) {
 +			if (ps3flash_submit_flush_request(dev, req))
++				break;
++		} else if (req->cmd_type == REQ_TYPE_FS) {
++			if (ps3flash_submit_request_sg(dev, req))
 +				break;
 +		} else {
 +			blk_dump_rq_flags(req, DEVICE_NAME " bad request");
@@ -349,8 +349,7 @@
 +		return IRQ_HANDLED;
 +	}
 +
-+	if (req->cmd_type == REQ_TYPE_LINUX_BLOCK &&
-+	    req->cmd[0] == REQ_LB_OP_FLUSH) {
++	if (req->cmd_flags & REQ_FLUSH) {
 +		read = 0;
 +		op = "flush";
 +	} else {
@@ -404,16 +403,6 @@
 +		return -EIO;
 +	}
 +	return 0;
-+}
-+
-+static void ps3flash_prepare_flush(struct request_queue *q, struct request *req)
-+{
-+	struct ps3_storage_device *dev = q->queuedata;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
-+
-+	req->cmd_type = REQ_TYPE_LINUX_BLOCK;
-+	req->cmd[0] = REQ_LB_OP_FLUSH;
 +}
 +
 +static int __devinit ps3flash_probe(struct ps3_system_bus_device *_dev)
@@ -499,8 +488,7 @@
 +		blk_queue_dma_alignment(queue, dev->blk_size-1);
 +		blk_queue_logical_block_size(queue, dev->blk_size);
 +
-+		blk_queue_ordered(queue, QUEUE_ORDERED_DRAIN_FLUSH,
-+				  ps3flash_prepare_flush);
++		blk_queue_flush(queue, REQ_FLUSH);
 +
 +		blk_queue_max_segments(queue, -1);
 +		blk_queue_max_segment_size(queue, dev->bounce_size);
@@ -636,9 +624,9 @@
 +MODULE_DESCRIPTION("PS3 Flash Storage Driver");
 +MODULE_AUTHOR("Sony Corporation");
 +MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
---- /dev/null	2013-03-07 08:18:06.538651881 +0100
-+++ b/drivers/block/ps3nflash.c	2013-03-13 09:12:13.182399456 +0100
-@@ -0,0 +1,460 @@
+--- /dev/null	2013-02-15 18:37:48.373100583 +0100
++++ b/drivers/block/ps3nflash.c	2013-02-15 22:48:41.887309686 +0100
+@@ -0,0 +1,449 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -892,16 +880,6 @@
 +	return IRQ_HANDLED;
 +}
 +
-+static void ps3nflash_prepare_flush(struct request_queue *q, struct request *req)
-+{
-+	struct ps3_storage_device *dev = q->queuedata;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
-+
-+	req->cmd_type = REQ_TYPE_LINUX_BLOCK;
-+	req->cmd[0] = REQ_LB_OP_FLUSH;
-+}
-+
 +static int __devinit ps3nflash_probe(struct ps3_system_bus_device *_dev)
 +{
 +	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
@@ -968,8 +946,7 @@
 +		blk_queue_dma_alignment(queue, dev->blk_size-1);
 +		blk_queue_logical_block_size(queue, dev->blk_size);
 +
-+		blk_queue_ordered(queue, QUEUE_ORDERED_DRAIN_FLUSH,
-+				  ps3nflash_prepare_flush);
++		blk_queue_flush(queue, REQ_FLUSH);
 +
 +		blk_queue_max_segments(queue, -1);
 +		blk_queue_max_segment_size(queue, dev->bounce_size);
