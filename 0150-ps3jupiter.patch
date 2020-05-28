@@ -1,18 +1,18 @@
---- a/drivers/net/wireless/Kconfig	2013-07-18 03:19:44.349296942 +0200
-+++ b/drivers/net/wireless/Kconfig	2013-07-18 03:20:20.909299068 +0200
-@@ -281,5 +281,6 @@
- source "drivers/net/wireless/zd1211rw/Kconfig"
+--- a/drivers/net/wireless/Kconfig	2014-05-18 14:11:03.774671817 +0200
++++ b/drivers/net/wireless/Kconfig	2014-05-18 14:11:22.341339564 +0200
+@@ -282,5 +282,6 @@
  source "drivers/net/wireless/mwifiex/Kconfig"
  source "drivers/net/wireless/cw1200/Kconfig"
+ source "drivers/net/wireless/rsi/Kconfig"
 +source "drivers/net/wireless/ps3jupiter/Kconfig"
  
  endif # WLAN
---- a/drivers/net/wireless/Makefile	2013-07-18 03:19:51.919297381 +0200
-+++ b/drivers/net/wireless/Makefile	2013-07-18 03:20:40.309300197 +0200
-@@ -59,3 +59,5 @@
- obj-$(CONFIG_BRCMSMAC)	+= brcm80211/
+--- a/drivers/net/wireless/Makefile	2014-05-18 14:12:36.731343891 +0200
++++ b/drivers/net/wireless/Makefile	2014-05-18 14:12:59.548011886 +0200
+@@ -60,3 +60,5 @@
  
  obj-$(CONFIG_CW1200)	+= cw1200/
+ obj-$(CONFIG_RSI_91X)	+= rsi/
 +
 +obj-$(CONFIG_PS3_JUPITER)	+= ps3jupiter/
 --- /dev/null	2012-01-06 10:29:22.673734242 +0100

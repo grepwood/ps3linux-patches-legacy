@@ -25,8 +25,8 @@
  }
  
  static inline int lv1_gpu_display_flip(u64 context_handle, u64 head,
---- a/drivers/video/ps3fb.c	2012-01-03 19:41:27.000000000 +0100
-+++ b/drivers/video/ps3fb.c	2012-01-05 23:17:32.550387632 +0100
+--- a/drivers/video/fbdev/ps3fb.c	2012-01-03 19:41:27.000000000 +0100
++++ b/drivers/video/fbdev/ps3fb.c	2012-01-05 23:17:32.550387632 +0100
 @@ -50,6 +50,7 @@
  
  #define GPU_INTR_STATUS_VSYNC_0			0	/* vsync on head A */
