@@ -40,8 +40,8 @@
 +
 +obj-$(CONFIG_PS3_JUPITER) += ps3_jupiter.o
 +obj-$(CONFIG_PS3_JUPITER_STA) += ps3_jupiter_sta.o
---- /dev/null	2012-11-10 07:58:54.153569898 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-11-10 08:05:29.000000000 -0900
+--- /dev/null	2012-11-10 13:28:04.180236973 -0900
++++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-11-10 13:30:36.000000000 -0900
 @@ -0,0 +1,605 @@
 +
 +/*
@@ -648,8 +648,8 @@
 +}
 +
 +#endif
---- /dev/null	2012-11-10 07:58:54.153569898 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-11-10 08:05:39.000000000 -0900
+--- /dev/null	2012-11-10 13:28:04.180236973 -0900
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-11-10 13:30:44.000000000 -0900
 @@ -0,0 +1,34 @@
 +
 +/*
@@ -685,8 +685,8 @@
 +	unsigned int *response_length, void *response);
 +
 +#endif
---- /dev/null	2012-11-10 07:58:54.153569898 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-11-10 08:05:39.000000000 -0900
+--- /dev/null	2012-11-10 13:28:04.180236973 -0900
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-11-10 13:30:44.000000000 -0900
 @@ -0,0 +1,1245 @@
 +
 +/*
@@ -1933,8 +1933,8 @@
 +MODULE_DESCRIPTION("PS3 Jupiter");
 +MODULE_AUTHOR("glevand");
 +MODULE_LICENSE("GPL");
---- /dev/null	2012-11-10 07:58:54.153569898 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-11-10 08:05:44.000000000 -0900
+--- /dev/null	2012-11-10 13:28:04.180236973 -0900
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-11-10 13:30:48.000000000 -0900
 @@ -0,0 +1,2934 @@
 +
 +/*
