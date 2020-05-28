@@ -1,13 +1,13 @@
---- a/drivers/char/Makefile	2012-06-07 11:27:29.447355622 +0200
-+++ b/drivers/char/Makefile	2012-06-07 11:28:31.760692581 +0200
+--- a/drivers/char/Makefile	2012-06-09 09:51:26.791009087 +0200
++++ b/drivers/char/Makefile	2012-06-09 09:52:08.014344819 +0200
 @@ -65,3 +65,4 @@
  js-rtc-y = rtc.o
  
  obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
 +obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:27:29.450688955 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:29:24.234028966 +0200
-@@ -370,4 +370,11 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:51:11.681008207 +0200
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:53:00.151014518 +0200
+@@ -185,4 +185,11 @@
  	help
  	  This driver allows you direct access to the PS3 physical memory.
  

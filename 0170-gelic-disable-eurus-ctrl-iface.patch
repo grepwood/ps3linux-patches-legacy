@@ -1,6 +1,6 @@
---- a/drivers/net/ps3_gelic_net.c	2012-07-13 16:50:58.364465250 +0200
-+++ b/drivers/net/ps3_gelic_net.c	2012-07-13 16:51:19.827799832 +0200
-@@ -1684,9 +1684,73 @@
+--- a/drivers/net/ps3_gelic_net.c	2012-07-13 16:56:21.427817379 +0200
++++ b/drivers/net/ps3_gelic_net.c	2012-07-13 16:56:40.324485145 +0200
+@@ -1669,9 +1669,73 @@
  {
  	struct gelic_card *card;
  	struct net_device *netdev;

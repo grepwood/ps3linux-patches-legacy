@@ -1,5 +1,5 @@
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-09-14 23:47:51.501330220 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-09-14 23:48:05.551331035 +0200
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:03:24.000000000 -0900
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:04:52.000000000 -0900
 @@ -202,4 +202,11 @@
  	  This support is required to access the PS3 ENCDEC device.
  	  In general, all users will say Y or M.

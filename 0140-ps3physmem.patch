@@ -1,13 +1,13 @@
---- a/drivers/char/Makefile	2011-08-03 21:43:28.000000000 +0200
-+++ b/drivers/char/Makefile	2012-06-07 11:26:57.010687067 +0200
+--- a/drivers/char/Makefile	2012-06-01 09:13:34.000000000 +0200
++++ b/drivers/char/Makefile	2012-06-09 09:49:29.711002275 +0200
 @@ -63,3 +63,5 @@
  
  obj-$(CONFIG_JS_RTC)		+= js-rtc.o
  js-rtc-y = rtc.o
 +
 +obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:23:29.850675015 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-07 11:24:13.980677582 +0200
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:47:23.490994931 +0200
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:50:39.384339661 +0200
 @@ -179,4 +179,10 @@
  	  profiling support of the Cell processor with programs like
  	  oprofile and perfmon2, then say Y or M, otherwise say N.
@@ -127,7 +127,7 @@
 +	vma->vm_flags |= VM_RESERVED | VM_IO;
 +	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 +
-+	pfn = (ps3physmem_lpar >> PAGE_SHIFT) + vma->vm_pgoff;
++	pfn = ((unsigned long) ps3physmem_virt >> PAGE_SHIFT) + vma->vm_pgoff;
 +
 +	res = io_remap_pfn_range(vma, vma->vm_start, pfn, size,
 +	    vma->vm_page_prot);

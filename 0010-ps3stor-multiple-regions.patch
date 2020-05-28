@@ -104,9 +104,9 @@
  				       &dev->tag);
  	if (res) {
  		dev_dbg(&dev->sbd.core, "%s:%u: %s failed %d\n", __func__,
---- a/drivers/block/ps3disk.c	2013-02-15 22:27:17.190568280 +0100
-+++ b/drivers/block/ps3disk.c	2013-02-15 22:37:00.060602190 +0100
-@@ -31,7 +31,8 @@
+--- a/drivers/block/ps3disk.c	2013-02-14 11:22:05.716017676 +0100
++++ b/drivers/block/ps3disk.c	2013-02-14 11:19:47.200033102 +0100
+@@ -32,7 +32,8 @@
  
  #define BOUNCE_SIZE		(64*1024)
  
@@ -116,7 +116,7 @@
  #define PS3DISK_MINORS		16
  
  
-@@ -40,12 +41,13 @@
+@@ -41,12 +42,13 @@
  
  struct ps3disk_private {
  	spinlock_t lock;		/* Request queue spinlock */
@@ -132,7 +132,7 @@
  };
  
  
-@@ -87,6 +89,13 @@
+@@ -88,6 +90,13 @@
  	.owner		= THIS_MODULE,
  };
  
@@ -146,7 +146,7 @@
  
  static void ps3disk_scatter_gather(struct ps3_storage_device *dev,
  				   struct request *req, int gather)
-@@ -125,7 +134,9 @@
+@@ -126,7 +135,9 @@
  	int write = rq_data_dir(req), res;
  	const char *op = write ? "write" : "read";
  	u64 start_sector, sectors;
@@ -157,7 +157,7 @@
  
  #ifdef DEBUG
  	unsigned int n = 0;
-@@ -148,11 +159,11 @@
+@@ -149,11 +160,11 @@
  		ps3disk_scatter_gather(dev, req, 1);
  
  		res = lv1_storage_write(dev->sbd.dev_id, region_id,
@@ -171,7 +171,7 @@
  				       dev->bounce_lpar, &dev->tag);
  	}
  	if (res) {
-@@ -231,6 +242,8 @@
+@@ -232,6 +243,8 @@
  	int res, read, error;
  	u64 tag, status;
  	const char *op;
@@ -180,7 +180,7 @@
  
  	res = lv1_storage_get_async_status(dev->sbd.dev_id, &tag, &status);
  
-@@ -278,7 +291,20 @@
+@@ -279,7 +292,20 @@
  	spin_lock(&priv->lock);
  	__blk_end_request_all(req, error);
  	priv->req = NULL;
@@ -202,7 +202,7 @@
  	spin_unlock(&priv->lock);
  
  	return IRQ_HANDLED;
-@@ -396,19 +422,17 @@
+@@ -397,19 +423,17 @@
  	return 0;
  }
  
@@ -225,7 +225,7 @@
  	if (dev->blk_size < 512) {
  		dev_err(&dev->sbd.core,
  			"%s:%u: cannot handle block size %llu\n", __func__,
-@@ -416,18 +440,6 @@
+@@ -417,18 +441,6 @@
  		return -EINVAL;
  	}
  
@@ -244,7 +244,7 @@
  	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
  	if (!priv) {
  		error = -ENOMEM;
-@@ -444,67 +456,86 @@
+@@ -445,67 +457,85 @@
  		goto fail_free_priv;
  	}
  
@@ -372,11 +372,10 @@
 +		if (priv->queue[devidx])
 +			blk_cleanup_queue(priv->queue[devidx]);
 +	}
-+
  	ps3stor_teardown(dev);
  fail_free_bounce:
  	kfree(dev->bounce_buf);
-@@ -512,9 +543,6 @@
+@@ -513,9 +543,6 @@
  	kfree(priv);
  	ps3_system_bus_set_drvdata(_dev, NULL);
  fail:
@@ -386,7 +385,7 @@
  	return error;
  }
  
-@@ -522,14 +550,19 @@
+@@ -523,14 +550,19 @@
  {
  	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
  	struct ps3disk_private *priv = ps3_system_bus_get_drvdata(&dev->sbd);

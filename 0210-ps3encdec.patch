@@ -74,8 +74,8 @@
  		dev->accessible_regions = 1;
  		return 0;
  	}
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-09-14 23:34:56.187951782 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-09-14 23:45:10.584654191 +0200
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 05:59:52.000000000 -0900
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:00:32.000000000 -0900
 @@ -192,4 +192,14 @@
  	  This driver allows you to create/delete/modify regions
  	  on PS3 storage devices.

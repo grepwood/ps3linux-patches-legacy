@@ -1,5 +1,5 @@
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-09-15 00:03:49.721385966 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-09-15 00:04:33.024721817 +0200
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:05:44.000000000 -0900
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:06:17.000000000 -0900
 @@ -209,4 +209,11 @@
  	help
  	  The isolated SPU file system is used to execute isolated SPU modules.

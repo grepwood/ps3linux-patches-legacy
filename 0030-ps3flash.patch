@@ -101,8 +101,8 @@
  obj-$(CONFIG_ATARI_FLOPPY)	+= ataflop.o
  obj-$(CONFIG_AMIGA_Z2RAM)	+= z2ram.o
 --- /dev/null	2013-02-15 18:37:48.373100583 +0100
-+++ b/drivers/block/ps3flash.c	2013-02-15 22:43:17.513957482 +0100
-@@ -0,0 +1,521 @@
++++ b/drivers/block/ps3flash.c	2013-02-15 21:15:12.330316672 +0100
+@@ -0,0 +1,520 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -535,7 +535,6 @@
 +		if (priv->queue[devidx])
 +			blk_cleanup_queue(priv->queue[devidx]);
 +	}
-+
 +fail_teardown:
 +	ps3stor_teardown(dev);
 +fail_free_bounce:
@@ -625,8 +624,8 @@
 +MODULE_AUTHOR("Sony Corporation");
 +MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
 --- /dev/null	2013-02-15 18:37:48.373100583 +0100
-+++ b/drivers/block/ps3nflash.c	2013-02-15 22:48:41.887309686 +0100
-@@ -0,0 +1,449 @@
++++ b/drivers/block/ps3nflash.c	2013-02-15 23:29:24.494118457 +0100
+@@ -0,0 +1,448 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -1008,7 +1007,6 @@
 +	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
 +	struct ps3nflash_private *priv = ps3_system_bus_get_drvdata(&dev->sbd);
 +	unsigned int devidx;
-+
 +
 +	for (devidx = 0; devidx < dev->num_regions; devidx++)
 +	{
