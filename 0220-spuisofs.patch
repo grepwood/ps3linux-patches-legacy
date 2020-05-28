@@ -1,6 +1,6 @@
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:03:24.000000000 -0900
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:04:52.000000000 -0900
-@@ -202,4 +202,11 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-08-08 21:45:40.869511244 +0200
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-08-08 21:43:09.502835770 +0200
+@@ -202,6 +202,13 @@
  	  This support is required to access the PS3 ENCDEC device.
  	  In general, all users will say Y or M.
  
@@ -11,7 +11,9 @@
 +	help
 +	  The isolated SPU file system is used to execute isolated SPU modules.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- a/arch/powerpc/platforms/ps3/Makefile	2012-08-08 21:45:25.436177008 +0200
 +++ b/arch/powerpc/platforms/ps3/Makefile	2012-08-08 21:43:40.846170928 +0200
 @@ -6,3 +6,5 @@

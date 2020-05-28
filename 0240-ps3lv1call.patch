@@ -5,9 +5,9 @@
  obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
  obj-$(CONFIG_PS3_ENCDEC)	+= ps3encdec.o
 +obj-$(CONFIG_PS3_LV1CALL)	+= ps3lv1call/
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:07:28.000000000 -0900
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:08:01.000000000 -0900
-@@ -216,4 +216,10 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-10-27 02:11:58.000000000 -0800
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-10-27 02:13:08.000000000 -0800
+@@ -228,6 +228,12 @@
  	help
  	  The isolated SPU loader file system is used to execute isolated SPU loaders.
  
@@ -17,7 +17,9 @@
 +	help
 +	  This driver allows you to execute LV1 calls.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- /dev/null	2012-10-27 01:55:30.097760558 -0800
 +++ b/drivers/char/ps3lv1call/Makefile	2012-10-27 02:10:35.000000000 -0800
 @@ -0,0 +1,4 @@

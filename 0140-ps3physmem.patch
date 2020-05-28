@@ -1,14 +1,14 @@
---- a/drivers/char/Makefile	2012-06-01 09:13:34.000000000 +0200
-+++ b/drivers/char/Makefile	2012-06-09 09:49:29.711002275 +0200
-@@ -63,3 +63,5 @@
- 
- obj-$(CONFIG_JS_RTC)		+= js-rtc.o
+--- a/drivers/char/Makefile	2012-02-03 21:39:51.000000000 +0100
++++ b/drivers/char/Makefile	2012-02-05 17:51:57.339262786 +0100
+@@ -65,3 +65,5 @@
  js-rtc-y = rtc.o
+ 
+ obj-$(CONFIG_TILE_SROM)		+= tile-srom.o
 +
 +obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:47:23.490994931 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:50:39.384339661 +0200
-@@ -179,4 +179,10 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-02-04 21:13:42.539806178 +0100
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-02-05 17:54:38.698430717 +0100
+@@ -179,6 +179,12 @@
  	  profiling support of the Cell processor with programs like
  	  oprofile and perfmon2, then say Y or M, otherwise say N.
  
@@ -18,7 +18,9 @@
 +	help
 +	  This driver allows you direct access to the PS3 physical memory.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- /dev/null	2012-02-05 10:06:29.087361680 +0100
 +++ b/drivers/char/ps3physmem.c	2012-02-05 17:50:30.897909862 +0100
 @@ -0,0 +1,185 @@
@@ -127,7 +129,7 @@
 +	vma->vm_flags |= VM_RESERVED | VM_IO;
 +	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 +
-+	pfn = ((unsigned long) ps3physmem_virt >> PAGE_SHIFT) + vma->vm_pgoff;
++	pfn = (ps3physmem_lpar >> PAGE_SHIFT) + vma->vm_pgoff;
 +
 +	res = io_remap_pfn_range(vma, vma->vm_start, pfn, size,
 +	    vma->vm_page_prot);

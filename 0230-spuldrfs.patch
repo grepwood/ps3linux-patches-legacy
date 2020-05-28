@@ -1,6 +1,6 @@
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:05:44.000000000 -0900
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:06:17.000000000 -0900
-@@ -209,4 +209,11 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-08-16 21:28:29.947236099 +0200
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-08-16 21:30:29.967243082 +0200
+@@ -209,6 +209,13 @@
  	help
  	  The isolated SPU file system is used to execute isolated SPU modules.
  
@@ -11,7 +11,9 @@
 +	help
 +	  The isolated SPU loader file system is used to execute isolated SPU loaders.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- a/arch/powerpc/platforms/ps3/Makefile	2012-08-16 21:28:29.947236099 +0200
 +++ b/arch/powerpc/platforms/ps3/Makefile	2012-08-16 21:30:54.793911193 +0200
 @@ -8,3 +8,4 @@

@@ -1,6 +1,6 @@
---- a/drivers/net/ps3_gelic_net.c	2012-07-13 16:56:21.427817379 +0200
-+++ b/drivers/net/ps3_gelic_net.c	2012-07-13 16:56:40.324485145 +0200
-@@ -1669,9 +1669,73 @@
+--- a/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-07-13 16:39:51.604426460 +0200
++++ b/drivers/net/ethernet/toshiba/ps3_gelic_net.c	2012-07-13 16:40:21.377761525 +0200
+@@ -1671,12 +1671,75 @@
  {
  	struct gelic_card *card;
  	struct net_device *netdev;
@@ -8,7 +8,9 @@
  	int result;
  
  	pr_debug("%s: called\n", __func__);
-+
+ 
+ 	udbg_shutdown_ps3gelic();
+ 
 +	/*
 +	 * Check for eurus control interface and disable it when it is enabled.
 +	 * NB: it must be done before opening the gelic device else it will not work.

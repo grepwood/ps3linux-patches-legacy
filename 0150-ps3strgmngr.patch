@@ -1,13 +1,13 @@
---- a/drivers/char/Makefile	2012-06-09 09:51:26.791009087 +0200
-+++ b/drivers/char/Makefile	2012-06-09 09:52:08.014344819 +0200
-@@ -65,3 +65,4 @@
- js-rtc-y = rtc.o
+--- a/drivers/char/Makefile	2012-02-08 19:49:18.736981163 +0100
++++ b/drivers/char/Makefile	2012-02-10 18:43:23.927197754 +0100
+@@ -67,3 +67,4 @@
+ obj-$(CONFIG_TILE_SROM)		+= tile-srom.o
  
  obj-$(CONFIG_PS3_PHYSMEM)	+= ps3physmem.o
 +obj-$(CONFIG_PS3_STRGMNGR)	+= ps3strgmngr.o
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:51:11.681008207 +0200
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-06-09 09:53:00.151014518 +0200
-@@ -185,4 +185,11 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-02-08 19:49:18.736981163 +0100
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-02-10 18:46:54.907113221 +0100
+@@ -185,6 +185,13 @@
  	help
  	  This driver allows you direct access to the PS3 physical memory.
  
@@ -18,7 +18,9 @@
 +	  This driver allows you to create/delete/modify regions
 +	  on PS3 storage devices.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- a/arch/powerpc/include/asm/Kbuild	2012-02-06 18:47:00.000000000 +0100
 +++ b/arch/powerpc/include/asm/Kbuild	2012-02-10 19:03:29.795768643 +0100
 @@ -34,3 +34,4 @@

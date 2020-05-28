@@ -7,12 +7,12 @@
 +source "drivers/net/wireless/ps3jupiter/Kconfig"
  
  endif # WLAN
---- a/drivers/net/wireless/Makefile	2012-06-01 09:13:34.000000000 +0200
-+++ b/drivers/net/wireless/Makefile	2012-06-09 09:54:38.014353542 +0200
-@@ -58,3 +58,5 @@
- obj-$(CONFIG_IWM)	+= iwmc3200wifi/
- 
- obj-$(CONFIG_MWIFIEX)	+= mwifiex/
+--- a/drivers/net/wireless/Makefile	2012-10-30 15:27:11.000000000 -0800
++++ b/drivers/net/wireless/Makefile	2012-11-06 09:29:47.000000000 -0900
+@@ -61,3 +61,5 @@
+ obj-$(CONFIG_BRCMFMAC) += brcm80211/
+ obj-$(CONFIG_BRCMUMAC) += brcm80211/
+ obj-$(CONFIG_BRCMSMAC) += brcm80211/
 +
 +obj-$(CONFIG_PS3_JUPITER)	+= ps3jupiter/
 --- /dev/null	2012-01-06 10:29:22.673734242 +0100
@@ -40,8 +40,8 @@
 +
 +obj-$(CONFIG_PS3_JUPITER) += ps3_jupiter.o
 +obj-$(CONFIG_PS3_JUPITER_STA) += ps3_jupiter_sta.o
---- /dev/null	2012-11-11 03:44:06.264441819 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-11-11 06:12:04.000000000 -0900
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-11-01 03:22:11.000000000 -0800
 @@ -0,0 +1,605 @@
 +
 +/*
@@ -648,8 +648,8 @@
 +}
 +
 +#endif
---- /dev/null	2012-11-11 03:44:06.264441819 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-11-11 06:12:13.000000000 -0900
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-11-01 03:22:23.000000000 -0800
 @@ -0,0 +1,34 @@
 +
 +/*
@@ -685,8 +685,8 @@
 +	unsigned int *response_length, void *response);
 +
 +#endif
---- /dev/null	2012-11-11 03:44:06.264441819 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-11-11 06:12:13.000000000 -0900
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-11-01 03:22:27.000000000 -0800
 @@ -0,0 +1,1245 @@
 +
 +/*
@@ -1933,8 +1933,8 @@
 +MODULE_DESCRIPTION("PS3 Jupiter");
 +MODULE_AUTHOR("glevand");
 +MODULE_LICENSE("GPL");
---- /dev/null	2012-11-11 03:44:06.264441819 -0900
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-11-11 06:12:18.000000000 -0900
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-11-01 03:22:36.000000000 -0800
 @@ -0,0 +1,2934 @@
 +
 +/*

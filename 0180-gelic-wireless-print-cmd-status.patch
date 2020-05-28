@@ -1,5 +1,5 @@
---- a/drivers/net/ps3_gelic_wireless.c	2011-08-03 21:43:28.000000000 +0200
-+++ b/drivers/net/ps3_gelic_wireless.c	2012-06-07 11:35:55.234051712 +0200
+--- a/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c	2012-01-26 01:39:32.000000000 +0100
++++ b/drivers/net/ethernet/toshiba/ps3_gelic_wireless.c	2012-02-03 15:42:14.996356826 +0100
 @@ -183,7 +183,7 @@
  				      &cmd->tag, &cmd->size);
  	if (cmd->status) {

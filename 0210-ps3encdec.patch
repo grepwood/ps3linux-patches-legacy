@@ -74,9 +74,9 @@
  		dev->accessible_regions = 1;
  		return 0;
  	}
---- a/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 05:59:52.000000000 -0900
-+++ b/arch/powerpc/platforms/ps3/Kconfig	2012-11-11 06:00:32.000000000 -0900
-@@ -192,4 +192,14 @@
+--- a/arch/powerpc/platforms/ps3/Kconfig	2012-08-02 23:17:17.153639603 +0200
++++ b/arch/powerpc/platforms/ps3/Kconfig	2012-08-06 19:46:13.304916903 +0200
+@@ -192,6 +192,16 @@
  	  This driver allows you to create/delete/modify regions
  	  on PS3 storage devices.
  
@@ -90,7 +90,9 @@
 +	  This support is required to access the PS3 ENCDEC device.
 +	  In general, all users will say Y or M.
 +
- endmenu
+ config PS3GELIC_UDBG
+ 	bool "PS3 udbg output via UDP broadcasts on Ethernet"
+ 	depends on PPC_PS3
 --- a/drivers/char/Makefile	2012-08-02 23:17:17.153639603 +0200
 +++ b/drivers/char/Makefile	2012-08-06 19:47:18.001587333 +0200
 @@ -67,3 +67,4 @@
