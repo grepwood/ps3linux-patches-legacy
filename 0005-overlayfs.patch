@@ -1,6 +1,6 @@
 --- a/Documentation/filesystems/Locking
 +++ b/Documentation/filesystems/Locking
-@@ -64,6 +64,7 @@ prototypes:
+@@ -66,6 +66,7 @@ prototypes:
  	int (*atomic_open)(struct inode *, struct dentry *,
  				struct file *, unsigned open_flag,
  				umode_t create_mode, int *opened);
@@ -8,7 +8,7 @@
  
  locking rules:
  	all may block
-@@ -91,6 +92,7 @@ removexattr:	yes
+@@ -93,6 +94,7 @@ removexattr:	yes
  fiemap:		no
  update_time:	no
  atomic_open:	yes
@@ -241,6 +241,42 @@
  
    invalidatepage: If a page has PagePrivate set, then invalidatepage
          will be called when part or all of the page is to be removed
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5917,6 +5917,13 @@ F:	drivers/scsi/osd/
+ F:	include/scsi/osd_*
+ F:	fs/exofs/
+ 
++OVERLAYFS FILESYSTEM
++M:	Miklos Szeredi <miklos@szeredi.hu>
++L:	linux-fsdevel@vger.kernel.org
++S:	Supported
++F:	fs/overlayfs/*
++F:	Documentation/filesystems/overlayfs.txt
++
+ P54 WIRELESS DRIVER
+ M:	Christian Lamparter <chunkeey@googlemail.com>
+ L:	linux-wireless@vger.kernel.org
+--- a/fs/Kconfig
++++ b/fs/Kconfig
+@@ -67,6 +67,7 @@ source "fs/quota/Kconfig"
+ 
+ source "fs/autofs4/Kconfig"
+ source "fs/fuse/Kconfig"
++source "fs/overlayfs/Kconfig"
+ 
+ config GENERIC_ACL
+ 	bool
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -107,6 +107,7 @@ obj-$(CONFIG_QNX6FS_FS)		+= qnx6/
+ obj-$(CONFIG_AUTOFS4_FS)	+= autofs4/
+ obj-$(CONFIG_ADFS_FS)		+= adfs/
+ obj-$(CONFIG_FUSE_FS)		+= fuse/
++obj-$(CONFIG_OVERLAYFS_FS)	+= overlayfs/
+ obj-$(CONFIG_UDF_FS)		+= udf/
+ obj-$(CONFIG_SUN_OPENPROMFS)	+= openpromfs/
+ obj-$(CONFIG_OMFS_FS)		+= omfs/
 --- a/fs/ecryptfs/main.c
 +++ b/fs/ecryptfs/main.c
 @@ -567,6 +567,13 @@ static struct dentry *ecryptfs_mount(str
@@ -271,26 +307,6 @@
   * namespace.c
   */
  extern int copy_mount_options(const void __user *, unsigned long *);
---- a/fs/Kconfig
-+++ b/fs/Kconfig
-@@ -67,6 +67,7 @@ source "fs/quota/Kconfig"
- 
- source "fs/autofs4/Kconfig"
- source "fs/fuse/Kconfig"
-+source "fs/overlayfs/Kconfig"
- 
- config GENERIC_ACL
- 	bool
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -107,6 +107,7 @@ obj-$(CONFIG_QNX6FS_FS)		+= qnx6/
- obj-$(CONFIG_AUTOFS4_FS)	+= autofs4/
- obj-$(CONFIG_ADFS_FS)		+= adfs/
- obj-$(CONFIG_FUSE_FS)		+= fuse/
-+obj-$(CONFIG_OVERLAYFS_FS)	+= overlayfs/
- obj-$(CONFIG_UDF_FS)		+= udf/
- obj-$(CONFIG_SUN_OPENPROMFS)	+= openpromfs/
- obj-$(CONFIG_OMFS_FS)		+= omfs/
 --- a/fs/namei.c
 +++ b/fs/namei.c
 @@ -402,6 +402,7 @@ int __inode_permission(struct inode *ino
@@ -301,7 +317,7 @@
  
  /**
   * sb_permission - Check superblock-level permissions
-@@ -2878,9 +2879,12 @@ finish_open_created:
+@@ -2867,9 +2868,12 @@ finish_open_created:
  	error = may_open(&nd->path, acc_mode, open_flag);
  	if (error)
  		goto out;
@@ -319,7 +335,7 @@
  		goto out;
 --- a/fs/namespace.c
 +++ b/fs/namespace.c
-@@ -1410,6 +1410,24 @@ void drop_collected_mounts(struct vfsmou
+@@ -1403,6 +1403,24 @@ void drop_collected_mounts(struct vfsmou
  	release_mounts(&umount_list);
  }
  
@@ -346,17 +362,17 @@
  {
 --- a/fs/open.c
 +++ b/fs/open.c
-@@ -816,8 +816,7 @@ struct file *dentry_open(const struct pa
- 		return ERR_PTR(error);
- 
- 	f->f_flags = flags;
--	f->f_path = *path;
--	error = do_dentry_open(f, NULL, cred);
-+	error = vfs_open(path, f, cred);
- 	if (!error) {
- 		error = open_check_o_direct(f);
- 		if (error) {
-@@ -832,6 +831,26 @@ struct file *dentry_open(const struct pa
+@@ -828,8 +828,7 @@ struct file *dentry_open(const struct pa
+ 	f = get_empty_filp();
+ 	if (!IS_ERR(f)) {
+ 		f->f_flags = flags;
+-		f->f_path = *path;
+-		error = do_dentry_open(f, NULL, cred);
++		error = vfs_open(path, f, cred);
+ 		if (!error) {
+ 			/* from now on we need fput() to dispose of f */
+ 			error = open_check_o_direct(f);
+@@ -846,6 +845,26 @@ struct file *dentry_open(const struct pa
  }
  EXPORT_SYMBOL(dentry_open);
  
@@ -383,6 +399,23 @@
  static inline int build_open_flags(int flags, umode_t mode, struct open_flags *op)
  {
  	int lookup_flags = 0;
+--- /dev/null
++++ b/fs/overlayfs/Kconfig
+@@ -0,0 +1,4 @@
++config OVERLAYFS_FS
++	tristate "Overlay filesystem support"
++	help
++	  Add support for overlay filesystem.
+--- /dev/null
++++ b/fs/overlayfs/Makefile
+@@ -0,0 +1,7 @@
++#
++# Makefile for the overlay filesystem.
++#
++
++obj-$(CONFIG_OVERLAYFS_FS) += overlayfs.o
++
++overlayfs-objs := super.o inode.o dir.o readdir.o copy_up.o
 --- /dev/null
 +++ b/fs/overlayfs/copy_up.c
 @@ -0,0 +1,385 @@
@@ -650,7 +683,7 @@
 +	ovl_path_upper(parent, &parentpath);
 +	upperdir = parentpath.dentry;
 +
-+	err = vfs_getattr(parentpath.mnt, parentpath.dentry, &pstat);
++	err = vfs_getattr(&parentpath, &pstat);
 +	if (err)
 +		return err;
 +
@@ -734,7 +767,7 @@
 +		}
 +
 +		ovl_path_lower(next, &lowerpath);
-+		err = vfs_getattr(lowerpath.mnt, lowerpath.dentry, &stat);
++		err = vfs_getattr(&lowerpath, &stat);
 +		if (!err)
 +			err = ovl_copy_up_one(parent, next, &lowerpath, &stat);
 +
@@ -758,7 +791,7 @@
 +		goto out_dput_parent;
 +
 +	ovl_path_lower(dentry, &lowerpath);
-+	err = vfs_getattr(lowerpath.mnt, lowerpath.dentry, &stat);
++	err = vfs_getattr(&lowerpath, &stat);
 +	if (err)
 +		goto out_dput_parent;
 +
@@ -1023,7 +1056,7 @@
 +	struct path realpath;
 +
 +	type = ovl_path_real(dentry, &realpath);
-+	err = vfs_getattr(realpath.mnt, realpath.dentry, stat);
++	err = vfs_getattr(&realpath, stat);
 +	if (err)
 +		return err;
 +
@@ -1427,7 +1460,7 @@
 +	struct path realpath;
 +
 +	ovl_path_real(dentry, &realpath);
-+	return vfs_getattr(realpath.mnt, realpath.dentry, stat);
++	return vfs_getattr(&realpath, stat);
 +}
 +
 +int ovl_permission(struct inode *inode, int mask)
@@ -1753,23 +1786,6 @@
 +	return inode;
 +
 +}
---- /dev/null
-+++ b/fs/overlayfs/Kconfig
-@@ -0,0 +1,4 @@
-+config OVERLAYFS_FS
-+	tristate "Overlay filesystem support"
-+	help
-+	  Add support for overlay filesystem.
---- /dev/null
-+++ b/fs/overlayfs/Makefile
-@@ -0,0 +1,7 @@
-+#
-+# Makefile for the overlay filesystem.
-+#
-+
-+obj-$(CONFIG_OVERLAYFS_FS) += overlayfs.o
-+
-+overlayfs-objs := super.o inode.o dir.o readdir.o copy_up.o
 --- /dev/null
 +++ b/fs/overlayfs/overlayfs.h
 @@ -0,0 +1,70 @@
@@ -3102,7 +3118,7 @@
 +module_exit(ovl_exit);
 --- a/fs/splice.c
 +++ b/fs/splice.c
-@@ -1307,6 +1307,7 @@ long do_splice_direct(struct file *in, l
+@@ -1310,6 +1310,7 @@ long do_splice_direct(struct file *in, l
  
  	return ret;
  }
@@ -3145,7 +3161,7 @@
  } ____cacheline_aligned;
  
  ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
-@@ -2005,6 +2017,7 @@ extern struct file *file_open_name(struc
+@@ -2006,6 +2018,7 @@ extern struct file *file_open_name(struc
  extern struct file *filp_open(const char *, int, umode_t);
  extern struct file *file_open_root(struct dentry *, struct vfsmount *,
  				   const char *, int);
@@ -3153,7 +3169,7 @@
  extern struct file * dentry_open(const struct path *, int, const struct cred *);
  extern int filp_close(struct file *, fl_owner_t id);
  
-@@ -2210,6 +2223,7 @@ extern sector_t bmap(struct inode *, sec
+@@ -2211,6 +2224,7 @@ extern sector_t bmap(struct inode *, sec
  #endif
  extern int notify_change(struct dentry *, struct iattr *);
  extern int inode_permission(struct inode *, int);
@@ -3163,7 +3179,7 @@
  static inline bool execute_ok(struct inode *inode)
 --- a/include/linux/mount.h
 +++ b/include/linux/mount.h
-@@ -66,6 +66,9 @@ extern void mnt_pin(struct vfsmount *mnt
+@@ -68,6 +68,9 @@ extern void mnt_pin(struct vfsmount *mnt
  extern void mnt_unpin(struct vfsmount *mnt);
  extern int __mnt_is_readonly(struct vfsmount *mnt);
  
@@ -3173,19 +3189,3 @@
  struct file_system_type;
  extern struct vfsmount *vfs_kern_mount(struct file_system_type *type,
  				      int flags, const char *name,
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5666,6 +5666,13 @@ F:	drivers/scsi/osd/
- F:	include/scsi/osd_*
- F:	fs/exofs/
- 
-+OVERLAYFS FILESYSTEM
-+M:	Miklos Szeredi <miklos@szeredi.hu>
-+L:	linux-fsdevel@vger.kernel.org
-+S:	Supported
-+F:	fs/overlayfs/*
-+F:	Documentation/filesystems/overlayfs.txt
-+
- P54 WIRELESS DRIVER
- M:	Christian Lamparter <chunkeey@googlemail.com>
- L:	linux-wireless@vger.kernel.org
