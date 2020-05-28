@@ -92,7 +92,7 @@
 +	.write	= ps3av_misc_write,
 +};
 +
- static int __devinit ps3av_probe(struct ps3_system_bus_device *dev)
+ static int ps3av_probe(struct ps3_system_bus_device *dev)
  {
  	int res;
 @@ -1009,11 +1076,34 @@

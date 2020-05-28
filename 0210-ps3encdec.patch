@@ -382,7 +382,7 @@
 +	.poll = ps3encdec_poll,
 +};
 +
-+static int __devinit ps3encdec_probe(struct ps3_system_bus_device *_dev)
++static int ps3encdec_probe(struct ps3_system_bus_device *_dev)
 +{
 +	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
 +	struct ps3encdec_private *priv;

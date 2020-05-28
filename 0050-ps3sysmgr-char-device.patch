@@ -121,7 +121,7 @@
 +	.write		= ps3_sys_manager_misc_write,
 +};
 +
- static int __devinit ps3_sys_manager_probe(struct ps3_system_bus_device *dev)
+ static int ps3_sys_manager_probe(struct ps3_system_bus_device *dev)
  {
  	int result;
 @@ -727,12 +822,47 @@

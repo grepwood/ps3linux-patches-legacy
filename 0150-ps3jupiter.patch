@@ -3646,7 +3646,7 @@
 +			case WLAN_EID_EXT_SUPP_RATES:
 +				scan_result->ext_supp_rates_ie = ie;
 +			break;
-+			case WLAN_EID_GENERIC:
++			case WLAN_EID_VENDOR_SPECIFIC:
 +			{
 +				/* WPA */
 +

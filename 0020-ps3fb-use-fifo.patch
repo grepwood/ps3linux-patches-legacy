@@ -111,7 +111,7 @@
 +static int ps3fb_gpu_mem_size_count;
 +module_param_array(ps3fb_gpu_mem_size, ulong, &ps3fb_gpu_mem_size_count, 0);
 +
- static char *mode_option __devinitdata;
+ static char *mode_option;
  
 +static int ps3fb_fb_setup(struct device *dev,
 +			  u64 context_handle,
