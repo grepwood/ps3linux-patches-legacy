@@ -40,9 +40,9 @@
 +
 +obj-$(CONFIG_PS3_JUPITER) += ps3_jupiter.o
 +obj-$(CONFIG_PS3_JUPITER_STA) += ps3_jupiter_sta.o
---- /dev/null	2012-05-05 10:04:09.332335008 +0200
-+++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-05-05 23:54:49.008567873 +0200
-@@ -0,0 +1,564 @@
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_eurus.h	2012-11-01 03:22:11.000000000 -0800
+@@ -0,0 +1,605 @@
 +
 +/*
 + * PS3 Eurus
@@ -86,15 +86,17 @@
 +	PS3_EURUS_CMD_SET_AP_WPA_AKM_SUITE		= 0x00c9,
 +	PS3_EURUS_CMD_GET_AP_WPA_GROUP_CIPHER_SUITE	= 0x00cd,
 +	PS3_EURUS_CMD_SET_AP_WPA_GROUP_CIPHER_SUITE	= 0x00cf,
-+	PS3_EURUS_CMD_GET_AP_WPA_PSK_BIN		= 0x00d1,
-+	PS3_EURUS_CMD_SET_AP_WPA_PSK_BIN		= 0x00d3,
++	PS3_EURUS_CMD_GET_AP_WPA_PSK_PASSPHRASE		= 0x00d1,
++	PS3_EURUS_CMD_SET_AP_WPA_PSK_PASSPHRASE		= 0x00d3,
 +	PS3_EURUS_CMD_0xd5				= 0x00d5,
-+	PS3_EURUS_CMD_GET_AP_WPA_PSK_PASSPHRASE		= 0x017b,
-+	PS3_EURUS_CMD_SET_AP_WPA_PSK_PASSPHRASE		= 0x017d,
++	PS3_EURUS_CMD_0x127				= 0x0127,
++	PS3_EURUS_CMD_0x12b				= 0x012b,
++	PS3_EURUS_CMD_GET_AP_WPA_PSK_BIN		= 0x017b,
++	PS3_EURUS_CMD_SET_AP_WPA_PSK_BIN		= 0x017d,
 +	PS3_EURUS_CMD_GET_AP_WPA_PAIRWISE_CIPHER_SUITE	= 0x01bd,
 +	PS3_EURUS_CMD_SET_AP_WPA_PAIRWISE_CIPHER_SUITE	= 0x01bf,
 +	PS3_EURUS_CMD_0x1d9				= 0x01d9,
-+	PS3_EURUS_CMD_0x1dd				= 0x01dd,
++	PS3_EURUS_CMD_START_AP				= 0x01dd,
 +	PS3_EURUS_CMD_0x1ed				= 0x01ed,
 +	PS3_EURUS_CMD_GET_HW_REVISION			= 0x01fb,
 +	PS3_EURUS_CMD_0x203				= 0x0203,
@@ -114,6 +116,8 @@
 +	PS3_EURUS_CMD_GET_RSSI				= 0x103d,
 +	PS3_EURUS_CMD_GET_MAC_ADDR			= 0x103f,
 +	PS3_EURUS_CMD_SET_MAC_ADDR			= 0x1041,
++	PS3_EURUS_CMD_0x104d				= 0x104d,
++	PS3_EURUS_CMD_0x104f				= 0x104f,
 +	PS3_EURUS_CMD_0x105f				= 0x105f,
 +	PS3_EURUS_CMD_0x1109				= 0x1109,
 +	PS3_EURUS_CMD_0x110b				= 0x110b,
@@ -136,16 +140,31 @@
 +
 +enum ps3_eurus_cmd_status {
 +	PS3_EURUS_CMD_OK				= 0x0001,
++	PS3_EURUS_CMD_INVALID_LENGTH			= 0x0002,
++	PS3_EURUS_CMD_UNSUPPORTED			= 0x0003,
++	PS3_EURUS_CMD_INVALID_PARAMETER			= 0x0004,
 +};
 +
 +enum ps3_eurus_event_type {
++	PS3_EURUS_EVENT_TYPE_0x8			= 0x00000008,
++	PS3_EURUS_EVENT_TYPE_0x10			= 0x00000010,
 +	PS3_EURUS_EVENT_TYPE_0x40			= 0x00000040,
 +	PS3_EURUS_EVENT_TYPE_0x80			= 0x00000080,
++	PS3_EURUS_EVENT_TYPE_0x100			= 0x00000100,
 +	PS3_EURUS_EVENT_TYPE_0x400			= 0x00000400,
 +	PS3_EURUS_EVENT_TYPE_0x80000000			= 0x80000000
 +};
 +
 +enum ps3_eurus_event_id {
++	/* event type 0x00000008 */
++
++	PS3_EURUS_EVENT_STA_CONNECTED			= 0x00000010,
++
++	/* event type 0x00000010 */
++
++	PS3_EURUS_EVENT_STA_DISCONNECTED		= 0x00000002,
++	PS3_EURUS_EVENT_AP_STOPPED			= 0x00000004,
++
 +	/* event type 0x00000040 */
 +
 +	PS3_EURUS_EVENT_DEAUTH				= 0x00000001,
@@ -157,6 +176,13 @@
 +	PS3_EURUS_EVENT_SCAN_COMPLETED			= 0x00000004,
 +	PS3_EURUS_EVENT_WPA_CONNECTED			= 0x00000020,
 +	PS3_EURUS_EVENT_WPA_ERROR			= 0x00000040,
++
++	/* event type 0x00000100 */
++
++	PS3_EURUS_EVENT_0x100_0x2			= 0x00000002,
++	PS3_EURUS_EVENT_AP_STARTED			= 0x00000010,
++	PS3_EURUS_EVENT_STA_WPA_CONNECTED		= 0x00000020,
++	PS3_EURUS_EVENT_0x100_0x40			= 0x00000040,
 +
 +	/* event type 0x80000000 */
 +
@@ -255,7 +281,7 @@
 +	u8 unknown2;
 +	u8 security_mode;	/* enum ps3_eurus_wep_security_mode */
 +	u8 unknown3;
-+	u8 key[4][16];
++	u8 key[4][18];
 +} __packed;
 +
 +struct ps3_eurus_cmd_0x61 {
@@ -287,18 +313,25 @@
 +	__be32 cipher_suite;	/* enum ps3_eurus_wpa_cipher_suite */
 +} __packed;
 +
-+struct ps3_eurus_cmd_ap_wpa_psk_bin {
-+	u8 psk[64];
++struct ps3_eurus_cmd_ap_wpa_psk_passphrase {
++	u8 passphrase[64];
 +} __packed;
 +
 +struct ps3_eurus_cmd_0xd5 {
-+	__le16 unknown;
-+	u8 res[2];
++	__le32 unknown;
 +} __packed;
 +
-+struct ps3_eurus_cmd_ap_wpa_psk_passphrase {
-+	u8 unknown;
-+	u8 passphrase[32];
++struct ps3_eurus_cmd_0x127 {
++	u8 res[4];
++} __packed;
++
++struct ps3_eurus_cmd_0x12b {
++	u8 res[4];
++} __packed;
++
++struct ps3_eurus_cmd_ap_wpa_psk_bin {
++	u8 enable;
++	u8 psk[32];
 +} __packed;
 +
 +struct ps3_eurus_cmd_ap_wpa_pairwise_cipher_suite {
@@ -312,7 +345,7 @@
 +	u8 res[2];
 +} __packed;
 +
-+struct ps3_eurus_cmd_0x1dd {
++struct ps3_eurus_cmd_start_ap {
 +	u8 unknown;
 +} __packed;
 +
@@ -405,8 +438,13 @@
 +	u8 ie[0];
 +} __packed;
 +
-+struct ps3_eurus_cmd_diassociate {
++struct ps3_eurus_cmd_disassociate {
 +	u8 unknown;
++} __packed;
++
++struct ps3_eurus_cmd_get_rssi {
++	u8 res[10];
++	u8 rssi;
 +} __packed;
 +
 +struct ps3_eurus_cmd_get_mac_addr {
@@ -418,9 +456,12 @@
 +	u8 mac_addr[6];
 +} __packed;
 +
-+struct ps3_eurus_cmd_get_rssi {
-+	u8 res[10];
-+	u8 rssi;
++struct ps3_eurus_cmd_0x104d {
++	u8 unknown;
++} __packed;
++
++struct ps3_eurus_cmd_0x104f {
++	u8 unknown;
 +} __packed;
 +
 +struct ps3_eurus_cmd_0x105f {
@@ -607,8 +648,8 @@
 +}
 +
 +#endif
---- /dev/null	2012-05-05 10:04:09.332335008 +0200
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-05-05 23:54:49.008567873 +0200
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.h	2012-11-01 03:22:23.000000000 -0800
 @@ -0,0 +1,34 @@
 +
 +/*
@@ -644,9 +685,9 @@
 +	unsigned int *response_length, void *response);
 +
 +#endif
---- /dev/null	2012-05-05 10:04:09.332335008 +0200
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-05-05 23:54:45.215234319 +0200
-@@ -0,0 +1,1246 @@
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-11-01 03:22:27.000000000 -0800
+@@ -0,0 +1,1245 @@
 +
 +/*
 + * PS3 Jupiter
@@ -1887,15 +1928,14 @@
 +module_init(ps3_jupiter_init);
 +module_exit(ps3_jupiter_exit);
 +
-+MODULE_DESCRIPTION("PS3 Jupiter");
 +MODULE_SUPPORTED_DEVICE("PS3 Jupiter");
 +MODULE_DEVICE_TABLE(usb, ps3_jupiter_devtab);
 +MODULE_DESCRIPTION("PS3 Jupiter");
 +MODULE_AUTHOR("glevand");
 +MODULE_LICENSE("GPL");
---- /dev/null	2012-05-05 10:04:09.332335008 +0200
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-05-06 00:36:02.085378416 +0200
-@@ -0,0 +1,2895 @@
+--- /dev/null	2012-11-01 00:09:58.397610712 -0800
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter_sta.c	2012-11-01 03:22:36.000000000 -0800
+@@ -0,0 +1,2934 @@
 +
 +/*
 + * PS3 Jupiter STA
@@ -1947,6 +1987,10 @@
 +#define PS3_JUPITER_STA_RX_BUFSIZE		0x620
 +
 +#define PS3_JUPITER_STA_TX_URBS			16
++
++#define PS3_JUPITER_STA_CHANNEL_DWELL		0x64
++
++#define PS3_JUPITER_STA_SCAN_VALID_TIME_SEC	60
 +
 +enum ps3_jupiter_sta_status {
 +	PS3_JUPITER_STA_READY = 0,
@@ -2038,6 +2082,7 @@
 +	struct list_head scan_result_list;
 +	enum ps3_jupiter_sta_scan_status scan_status;
 +	struct completion scan_done_comp;
++	unsigned long scan_expires;
 +
 +	unsigned long config_status;
 +
@@ -2119,7 +2164,7 @@
 +static void ps3_jupiter_sta_free_scan_results(struct ps3_jupiter_sta_dev *jstad);
 +
 +static int ps3_jupiter_sta_start_scan(struct ps3_jupiter_sta_dev *jstad,
-+	u8 *essid, size_t essid_length, u16 channels);
++	u8 *essid, size_t essid_length, u16 channels, u8 active, u16 channel_dwell);
 +
 +static char *ps3_jupiter_sta_translate_scan_result(struct ps3_jupiter_sta_dev *jstad,
 +	struct ps3_jupiter_sta_scan_result *scan_result,
@@ -2371,23 +2416,43 @@
 +	u8 *essid = NULL;
 +	size_t essid_length = 0;
 +	u16 channels = jstad->channel_info;
++	__u8 channel;
++	u8 active = 1;
++	u16 channel_dwell = PS3_JUPITER_STA_CHANNEL_DWELL;
++	int i;
 +	int err;
 +
 +	pr_debug("%s: called\n", __func__);
 +
 +	if (wrqu->data.length == sizeof(*scan_req)) {
++		scan_req = (struct iw_scan_req *) extra;
++
 +		if (wrqu->data.flags & IW_SCAN_THIS_ESSID) {
-+			scan_req = (struct iw_scan_req *) extra;
 +			essid = scan_req->essid;
 +			essid_length = scan_req->essid_len;
 +
 +			pr_debug("%s: essid %s\n", __func__, essid);
 +		}
 +
-+		/*XXX: get channels from scan request */
++		if (scan_req->num_channels > 0)
++			channels = 0;
++
++		for (i = 0; i < scan_req->num_channels; i++) {
++			if (scan_req->channel_list[i].e == 1)
++				channel = ps3_jupiter_sta_freq_to_channel(scan_req->channel_list[i].m / 100000);
++			else
++				channel = scan_req->channel_list[i].m;
++
++			channels |= 1 << (channel - 1);
++		}
++
++		pr_debug("%s: channels 0x%04x\n", __func__, channels);
++
++		active = (scan_req->scan_type == IW_SCAN_TYPE_ACTIVE);
 +	}
 +
-+	err = ps3_jupiter_sta_start_scan(jstad, essid, essid_length, channels);
++	err = ps3_jupiter_sta_start_scan(jstad, essid, essid_length, channels,
++	    active, channel_dwell);
 +
 +	pr_debug("%s: done\n", __func__);
 +
@@ -2960,7 +3025,18 @@
 +static int ps3_jupiter_sta_set_mlme(struct net_device *netdev,
 +	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
 +{
-+	/* XXX: implement */
++	struct ps3_jupiter_sta_dev *jstad = netdev_priv(netdev);
++	struct iw_mlme *mlme = (struct iw_mlme *) extra;
++
++	switch (mlme->cmd) {
++	case IW_MLME_DEAUTH:
++	break;
++	case IW_MLME_DISASSOC:
++		ps3_jupiter_sta_disassoc(jstad);
++	break;
++	default:
++		return -EOPNOTSUPP;
++	}
 +
 +	return 0;
 +}
@@ -3161,18 +3237,18 @@
 +};
 +
 +enum {
-+	PS3_JUPITER_STA_IW_PRIV_SET_MODE = SIOCIWFIRSTPRIV,
-+	PS3_JUPITER_STA_IW_PRIV_GET_MODE,
++	PS3_JUPITER_STA_IW_PRIV_SET_OPMODE = SIOCIWFIRSTPRIV,
++	PS3_JUPITER_STA_IW_PRIV_GET_OPMODE,
 +};
 +
 +static struct iw_priv_args ps3_jupiter_sta_iw_priv_args[] = {
 +	{
-+		.cmd = PS3_JUPITER_STA_IW_PRIV_SET_MODE,
++		.cmd = PS3_JUPITER_STA_IW_PRIV_SET_OPMODE,
 +		.set_args = IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
 +		.name = "set_opmode"
 +	},
 +	{
-+		.cmd = PS3_JUPITER_STA_IW_PRIV_GET_MODE,
++		.cmd = PS3_JUPITER_STA_IW_PRIV_GET_OPMODE,
 +		.get_args = IW_PRIV_TYPE_INT | IW_PRIV_SIZE_FIXED | 1,
 +		.name = "get_opmode"
 +	},
@@ -3399,7 +3475,7 @@
 + * ps3_jupiter_sta_start_scan
 + */
 +static int ps3_jupiter_sta_start_scan(struct ps3_jupiter_sta_dev *jstad,
-+	u8 *essid, size_t essid_length, u16 channels)
++	u8 *essid, size_t essid_length, u16 channels, u8 active, u16 channel_dwell)
 +{
 +	struct ps3_eurus_cmd_start_scan *eurus_cmd_start_scan;
 +	struct usb_device *udev = jstad->udev;
@@ -3434,8 +3510,8 @@
 +
 +	eurus_cmd_start_scan = (struct ps3_eurus_cmd_start_scan *) buf;
 +	memset(eurus_cmd_start_scan, 0, 0x100);
-+	eurus_cmd_start_scan->unknown2 = 0x1;
-+	eurus_cmd_start_scan->channel_dwell = cpu_to_le16(0x64);
++	eurus_cmd_start_scan->unknown2 = active;
++	eurus_cmd_start_scan->channel_dwell = cpu_to_le16(channel_dwell);
 +
 +	chan_ie = eurus_cmd_start_scan->ie;
 +	chan_ie[0] = WLAN_EID_DS_PARAMS;	/* ie id */
@@ -3960,7 +4036,8 @@
 +			eurus_cmd_wpa_config->akm_suite = PS3_EURUS_WPA_AKM_SUITE_WPA2_PSK;
 +		break;
 +		default:
-+			/* to make compiler happy */ ;
++			/* should never happen */
++			BUG();
 +		}
 +
 +		eurus_cmd_wpa_config->psk_type = PS3_EURUS_WPA_PSK_BIN;
@@ -4040,7 +4117,8 @@
 +
 +	dev_dbg(&udev->dev, "starting new association\n");
 +
-+	if (jstad->scan_status != PS3_JUPITER_STA_SCAN_OK) {
++	if ((jstad->scan_status != PS3_JUPITER_STA_SCAN_OK) ||
++	    time_after_eq(jiffies, jstad->scan_expires)) {
 +		/* start scan and wait for scan results */
 +
 +		if (test_bit(PS3_JUPITER_STA_CONFIG_ESSID_SET, &jstad->config_status)) {
@@ -4051,7 +4129,8 @@
 +			essid_length = 0;
 +		}
 +
-+		err = ps3_jupiter_sta_start_scan(jstad, essid, essid_length, jstad->channel_info);
++		err = ps3_jupiter_sta_start_scan(jstad, essid, essid_length, jstad->channel_info,
++		    1, PS3_JUPITER_STA_CHANNEL_DWELL);
 +		if (err)
 +			goto done;
 +
@@ -4121,7 +4200,7 @@
 + */
 +static int ps3_jupiter_sta_disassoc(struct ps3_jupiter_sta_dev *jstad)
 +{
-+	struct ps3_eurus_cmd_diassociate *eurus_cmd_diassociate;
++	struct ps3_eurus_cmd_disassociate *eurus_cmd_disassociate;
 +	unsigned char *buf = NULL;
 +	unsigned int status;
 +	int err;
@@ -4130,11 +4209,11 @@
 +	if (!buf)
 +		return -ENOMEM;
 +
-+	eurus_cmd_diassociate = (struct ps3_eurus_cmd_diassociate *) buf;
-+	memset(eurus_cmd_diassociate, 0, sizeof(*eurus_cmd_diassociate));
++	eurus_cmd_disassociate = (struct ps3_eurus_cmd_disassociate *) buf;
++	memset(eurus_cmd_disassociate, 0, sizeof(*eurus_cmd_disassociate));
 +
 +	err = ps3_jupiter_exec_eurus_cmd(PS3_EURUS_CMD_DISASSOCIATE,
-+	    eurus_cmd_diassociate, sizeof(*eurus_cmd_diassociate), &status, NULL, NULL);
++	    eurus_cmd_disassociate, sizeof(*eurus_cmd_disassociate), &status, NULL, NULL);
 +	if (err)
 +		goto done;
 +
@@ -4166,6 +4245,7 @@
 +	if (err)
 +		goto done;
 +
++	jstad->scan_expires = jiffies + PS3_JUPITER_STA_SCAN_VALID_TIME_SEC * HZ;
 +	jstad->scan_status = PS3_JUPITER_STA_SCAN_OK;
 +
 +	complete(&jstad->scan_done_comp);
@@ -4785,7 +4865,6 @@
 +module_init(ps3_jupiter_sta_init);
 +module_exit(ps3_jupiter_sta_exit);
 +
-+MODULE_DESCRIPTION("PS3 Jupiter STA");
 +MODULE_SUPPORTED_DEVICE("PS3 Jupiter STA");
 +MODULE_DEVICE_TABLE(usb, ps3_jupiter_sta_devtab);
 +MODULE_DESCRIPTION("PS3 Jupiter STA");
