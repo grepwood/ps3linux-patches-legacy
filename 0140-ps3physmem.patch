@@ -130,7 +130,7 @@
 +	vma->vm_flags |= VM_RESERVED | VM_IO;
 +	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 +
-+	pfn = (ps3physmem_lpar >> PAGE_SHIFT) + vma->vm_pgoff;
++	pfn = ((unsigned long) ps3physmem_virt >> PAGE_SHIFT) + vma->vm_pgoff;
 +
 +	res = io_remap_pfn_range(vma, vma->vm_start, pfn, size,
 +	    vma->vm_page_prot);

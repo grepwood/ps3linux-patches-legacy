@@ -1,9 +1,9 @@
---- a/drivers/net/wireless/Kconfig	2013-07-13 08:03:33.230972283 +0200
-+++ b/drivers/net/wireless/Kconfig	2013-07-13 08:04:12.447641232 +0200
-@@ -488,5 +488,6 @@
- source "drivers/net/wireless/orinoco/Kconfig"
+--- a/drivers/net/wireless/Kconfig	2011-08-03 21:43:28.000000000 +0200
++++ b/drivers/net/wireless/Kconfig	2012-06-07 11:40:00.930732669 +0200
+@@ -284,5 +284,6 @@
+ source "drivers/net/wireless/wl1251/Kconfig"
  source "drivers/net/wireless/wl12xx/Kconfig"
- source "drivers/net/wireless/iwmc3200wifi/Kconfig"
+ source "drivers/net/wireless/zd1211rw/Kconfig"
 +source "drivers/net/wireless/ps3jupiter/Kconfig"
  
  endif # WLAN
@@ -644,9 +644,9 @@
 +	unsigned int *response_length, void *response);
 +
 +#endif
---- /dev/null	2013-07-13 07:36:25.660877597 +0200
-+++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2013-07-13 08:41:42.537772136 +0200
-@@ -0,0 +1,1241 @@
+--- /dev/null	2012-05-05 10:04:09.332335008 +0200
++++ b/drivers/net/wireless/ps3jupiter/ps3_jupiter.c	2012-05-05 23:54:45.215234319 +0200
+@@ -0,0 +1,1246 @@
 +
 +/*
 + * PS3 Jupiter
@@ -1239,7 +1239,8 @@
 +	if (!jd->irq_urb)
 +		return -ENOMEM;
 +
-+	jd->irq_buf = kmalloc(PS3_JUPITER_IRQ_BUFSIZE, GFP_KERNEL);
++	jd->irq_buf = usb_alloc_coherent(udev, PS3_JUPITER_IRQ_BUFSIZE,
++	    GFP_KERNEL, &jd->irq_urb->transfer_dma);
 +	if (!jd->irq_buf)
 +		return -ENOMEM;
 +
@@ -1251,12 +1252,14 @@
 +	if (!jd->cmd_urb)
 +		return -ENOMEM;
 +
-+	jd->cmd_buf = kmalloc(PS3_JUPITER_CMD_BUFSIZE, GFP_KERNEL);
++	jd->cmd_buf = usb_alloc_coherent(udev, PS3_JUPITER_CMD_BUFSIZE,
++	    GFP_KERNEL, &jd->cmd_urb->transfer_dma);
 +	if (!jd->cmd_buf)
 +		return -ENOMEM;
 +
 +	usb_fill_int_urb(jd->cmd_urb, udev, usb_sndintpipe(udev, PS3_JUPITER_EP),
 +	    jd->cmd_buf, PS3_JUPITER_CMD_BUFSIZE, ps3_jupiter_cmd_urb_complete, jd, 1);
++	jd->cmd_urb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
 +
 +	return 0;
 +}
@@ -1272,7 +1275,8 @@
 +		usb_kill_urb(jd->irq_urb);
 +
 +		if (jd->irq_buf)
-+			kfree(jd->irq_buf);
++			usb_free_coherent(udev, PS3_JUPITER_IRQ_BUFSIZE,
++			    jd->irq_buf, jd->irq_urb->transfer_dma);
 +
 +		usb_free_urb(jd->irq_urb);
 +	}
@@ -1281,7 +1285,8 @@
 +		usb_kill_urb(jd->cmd_urb);
 +
 +		if (jd->cmd_buf)
-+			kfree(jd->cmd_buf);
++			usb_free_coherent(udev, PS3_JUPITER_CMD_BUFSIZE,
++			    jd->cmd_buf, jd->cmd_urb->transfer_dma);
 +
 +		usb_free_urb(jd->cmd_urb);
 +	}

@@ -100,9 +100,9 @@
  obj-$(CONFIG_PS3_VRAM)		+= ps3vram.o
  obj-$(CONFIG_ATARI_FLOPPY)	+= ataflop.o
  obj-$(CONFIG_AMIGA_Z2RAM)	+= z2ram.o
---- /dev/null	2013-07-13 07:36:25.660877597 +0200
-+++ b/drivers/block/ps3flash.c	2013-07-13 08:34:22.847746556 +0200
-@@ -0,0 +1,534 @@
+--- /dev/null	2013-03-07 08:18:06.538651881 +0100
++++ b/drivers/block/ps3flash.c	2013-03-13 09:11:01.298367969 +0100
+@@ -0,0 +1,533 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -494,7 +494,7 @@
 +
 +		blk_queue_bounce_limit(queue, BLK_BOUNCE_HIGH);
 +
-+		blk_queue_max_sectors(queue, dev->bounce_size >> 9);
++		blk_queue_max_hw_sectors(queue, dev->bounce_size >> 9);
 +		blk_queue_segment_boundary(queue, -1UL);
 +		blk_queue_dma_alignment(queue, dev->blk_size-1);
 +		blk_queue_logical_block_size(queue, dev->blk_size);
@@ -502,8 +502,7 @@
 +		blk_queue_ordered(queue, QUEUE_ORDERED_DRAIN_FLUSH,
 +				  ps3flash_prepare_flush);
 +
-+		blk_queue_max_phys_segments(queue, -1);
-+		blk_queue_max_hw_segments(queue, -1);
++		blk_queue_max_segments(queue, -1);
 +		blk_queue_max_segment_size(queue, dev->bounce_size);
 +
 +		gendisk = alloc_disk(PS3FLASH_MINORS);
@@ -637,9 +636,9 @@
 +MODULE_DESCRIPTION("PS3 Flash Storage Driver");
 +MODULE_AUTHOR("Sony Corporation");
 +MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
---- /dev/null	2013-07-13 07:36:25.660877597 +0200
-+++ b/drivers/block/ps3nflash.c	2013-07-13 08:34:51.087748199 +0200
-@@ -0,0 +1,461 @@
+--- /dev/null	2013-03-07 08:18:06.538651881 +0100
++++ b/drivers/block/ps3nflash.c	2013-03-13 09:12:13.182399456 +0100
+@@ -0,0 +1,460 @@
 +/*
 + * PS3 Flash Storage Driver
 + *
@@ -964,7 +963,7 @@
 +
 +		blk_queue_bounce_limit(queue, BLK_BOUNCE_HIGH);
 +
-+		blk_queue_max_sectors(queue, dev->bounce_size >> 9);
++		blk_queue_max_hw_sectors(queue, dev->bounce_size >> 9);
 +		blk_queue_segment_boundary(queue, -1UL);
 +		blk_queue_dma_alignment(queue, dev->blk_size-1);
 +		blk_queue_logical_block_size(queue, dev->blk_size);
@@ -972,8 +971,7 @@
 +		blk_queue_ordered(queue, QUEUE_ORDERED_DRAIN_FLUSH,
 +				  ps3nflash_prepare_flush);
 +
-+		blk_queue_max_phys_segments(queue, -1);
-+		blk_queue_max_hw_segments(queue, -1);
++		blk_queue_max_segments(queue, -1);
 +		blk_queue_max_segment_size(queue, dev->bounce_size);
 +
 +		gendisk = alloc_disk(PS3NFLASH_MINORS);
